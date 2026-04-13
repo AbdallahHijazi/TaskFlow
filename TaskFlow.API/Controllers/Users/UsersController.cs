@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
 
@@ -45,11 +44,34 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id}/tasks")]
-    [ProducesResponseType(typeof(List<TaskDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserTasksPagedResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserTasks(Guid id)
+    public async Task<IActionResult> GetUserTasks(
+        Guid id,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] Guid? status = null,
+        [FromQuery] Guid? initiativeId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? search = null,
+        [FromQuery] string sortBy = "createdAt",
+        [FromQuery] string sortDirection = "desc")
     {
-        var result = await _mediator.Send(new GetUserTasksQuery(id));
+        var parameters = new UserTasksQueryParametersDto
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            Status = status,
+            InitiativeId = initiativeId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Search = search,
+            SortBy = sortBy,
+            SortDirection = sortDirection
+        };
+
+        var result = await _mediator.Send(new GetUserTasksQuery(id, parameters));
         return Ok(result);
     }
 
