@@ -1,10 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Image;
 using TaskFlow.Application.Features.Images.Commands;
@@ -17,11 +12,16 @@ namespace TaskFlow.Application.Features.Images.Handlers
     {
         private readonly IRepository<Image> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageFileStorage _fileStorage;
 
-        public UpdateImageCommandHandler(IRepository<Image> repository, IUnitOfWork unitOfWork)
+        public UpdateImageCommandHandler(
+            IRepository<Image> repository,
+            IUnitOfWork unitOfWork,
+            IImageFileStorage fileStorage)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _fileStorage = fileStorage;
         }
 
         public async Task<ImageDto> Handle(UpdateImageCommand request, CancellationToken cancellationToken)
@@ -35,26 +35,50 @@ namespace TaskFlow.Application.Features.Images.Handlers
                 if (image == null)
                     throw new NotFoundException("الصورة", request.Id);
 
-                image.FileName = request.Dto.FileName;
-                image.FilePath = request.Dto.FilePath;
-                image.MediaType = request.Dto.MediaType;
-                image.SizeInBytes = request.Dto.SizeInBytes;
-                image.ThumbnailPath = request.Dto.ThumbnailPath;
+                var oldPath = image.FilePath;
 
-                _repository.Update(image);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                var stored = await _fileStorage.SaveAsync(
+                    request.FileStream,
+                    request.OriginalFileName,
+                    request.ContentType,
+                    cancellationToken);
+
+                image.FileName = stored.OriginalFileName;
+                image.FilePath = stored.WebRelativePath;
+                image.MediaType = stored.MediaType;
+                image.SizeInBytes = stored.SizeInBytes;
+                image.UploadedAt = DateTime.UtcNow;
+
+                try
+                {
+                    _repository.Update(image);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                catch
+                {
+                    await _fileStorage.DeleteAsync(stored.WebRelativePath, cancellationToken);
+                    throw;
+                }
+
+                if (!string.IsNullOrWhiteSpace(oldPath))
+                    await _fileStorage.DeleteAsync(oldPath, cancellationToken);
 
                 return new ImageDto
                 {
                     Id = image.Id,
-                    FileName = image.FileName,
-                    FilePath = image.FilePath,
-                    MediaType = image.MediaType,
+                    FileName = image.FileName ?? string.Empty,
+                    FilePath = image.FilePath ?? string.Empty,
+                    MediaType = image.MediaType ?? string.Empty,
                     SizeInBytes = image.SizeInBytes ?? 0,
-                    ThumbnailPath = image.ThumbnailPath
+                    ThumbnailPath = image.ThumbnailPath,
+                    UploadedAt = image.UploadedAt
                 };
             }
             catch (NotFoundException)
+            {
+                throw;
+            }
+            catch (BadRequestException)
             {
                 throw;
             }

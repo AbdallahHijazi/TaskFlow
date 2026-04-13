@@ -1,10 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.Features.Images.Commands;
 using TaskFlow.Domain.Entities;
@@ -16,11 +11,16 @@ namespace TaskFlow.Application.Features.Images.Handlers
     {
         private readonly IRepository<Image> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageFileStorage _fileStorage;
 
-        public DeleteImageCommandHandler(IRepository<Image> repository, IUnitOfWork unitOfWork)
+        public DeleteImageCommandHandler(
+            IRepository<Image> repository,
+            IUnitOfWork unitOfWork,
+            IImageFileStorage fileStorage)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _fileStorage = fileStorage;
         }
 
         public async Task<bool> Handle(DeleteImageCommand request, CancellationToken cancellationToken)
@@ -34,8 +34,12 @@ namespace TaskFlow.Application.Features.Images.Handlers
                 if (image == null)
                     throw new NotFoundException("الصورة", request.Id);
 
+                var path = image.FilePath;
+
                 _repository.Delete(image);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _fileStorage.DeleteAsync(path, cancellationToken);
 
                 return true;
             }

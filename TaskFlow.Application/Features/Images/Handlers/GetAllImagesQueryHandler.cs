@@ -1,10 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Image;
 using TaskFlow.Application.Features.Images.Commands;
@@ -28,11 +23,12 @@ namespace TaskFlow.Application.Features.Images.Handlers
                 .Select(image => new ImageDto
                 {
                     Id = image.Id,
-                    FileName = image.FileName,
-                    FilePath = image.FilePath,
-                    MediaType = image.MediaType,
+                    FileName = image.FileName ?? string.Empty,
+                    FilePath = image.FilePath ?? string.Empty,
+                    MediaType = image.MediaType ?? string.Empty,
                     SizeInBytes = image.SizeInBytes ?? 0,
-                    ThumbnailPath = image.ThumbnailPath
+                    ThumbnailPath = image.ThumbnailPath,
+                    UploadedAt = image.UploadedAt
                 })
                 .ToListAsync(cancellationToken);
 

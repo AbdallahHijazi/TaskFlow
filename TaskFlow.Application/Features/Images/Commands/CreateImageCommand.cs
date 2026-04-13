@@ -1,20 +1,20 @@
-﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
+using MediatR;
 using TaskFlow.Application.DTOs.Image;
 
 namespace TaskFlow.Application.Features.Images.Commands
 {
     public class CreateImageCommand : IRequest<ImageDto>
     {
-        public CreateImageDto Dto { get; set; }
+        public Stream FileStream { get; }
+        public string OriginalFileName { get; }
+        public string ContentType { get; }
 
-        public CreateImageCommand(CreateImageDto dto)
+        public CreateImageCommand(Stream fileStream, string originalFileName, string contentType)
         {
-            Dto = dto;
+            FileStream = fileStream;
+            OriginalFileName = originalFileName;
+            ContentType = contentType;
         }
     }
 }

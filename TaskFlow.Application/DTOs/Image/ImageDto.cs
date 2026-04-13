@@ -14,5 +14,6 @@ namespace TaskFlow.Application.DTOs.Image
         public string MediaType { get; set; } = string.Empty;
         public long SizeInBytes { get; set; }
         public string? ThumbnailPath { get; set; }
+        public DateTime? UploadedAt { get; set; }
     }
 }
