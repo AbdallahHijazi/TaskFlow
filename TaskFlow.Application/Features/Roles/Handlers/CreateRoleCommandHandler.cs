@@ -43,7 +43,7 @@ namespace TaskFlow.Application.Features.Roles.Handlers
                     RoleName = role.RoleName
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException("حدث خطأ أثناء إنشاء الدور. يرجى المحاولة مرة أخرى.");
             }

@@ -30,7 +30,7 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                 .Select(i => new InitiativeDto
                 {
                     Id = i.Id,
-                    Name = i.Name,
+                    Name = i.Name ?? string.Empty,
                     Description = i.Description,
                     StartDate = i.StartDate,
                     EndDate = i.EndDate,

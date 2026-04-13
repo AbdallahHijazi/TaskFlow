@@ -28,7 +28,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                 .Select(t => new TaskDto
                 {
                     Id = t.Id,
-                    Name = t.Name,
+                    Name = t.Name ?? string.Empty,
                     Description = t.Description,
                     StartDate = t.StartDate,
                     EndDate = t.EndDate,

@@ -30,8 +30,8 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 .Select(u => new UserDto
                 {
                     Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email,
+                    Name = u.Name ?? string.Empty,
+                    Email = u.Email ?? string.Empty,
                     PhoneNumber = u.PhoneNumber,
                     RoleId = u.RoleId ?? Guid.Empty
                 })

@@ -69,7 +69,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     RoleId = user.RoleId ?? Guid.Empty
                 };
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 throw;
             }

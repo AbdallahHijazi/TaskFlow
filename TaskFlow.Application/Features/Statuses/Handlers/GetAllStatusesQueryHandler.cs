@@ -29,7 +29,7 @@ namespace TaskFlow.Application.Features.Statuses.Handlers
                     .Select(s => new StatusDto
                     {
                         Id = s.Id,
-                        Name = s.Name,
+                        Name = s.Name ?? string.Empty,
                         Description = s.Description,
                         Color = s.Color
                     })
@@ -43,12 +43,12 @@ namespace TaskFlow.Application.Features.Statuses.Handlers
                 return statuses.Select(s => new StatusDto
                 {
                     Id = s.Id,
-                    Name = s.Name,
+                    Name = s.Name ?? string.Empty,
                     Description = s.Description,
                     Color = s.Color
                 }).ToList();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException("حدث خطأ أثناء جلب قائمة الحالات. يرجى المحاولة مرة أخرى لاحقاً.");
             }
