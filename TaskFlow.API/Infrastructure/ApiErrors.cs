@@ -1,26 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Domain.Exceptions;
 
-namespace TaskFlow.API.Infrastructure
+namespace TaskFlow.API.Infrastructure;
+
+internal static class ApiErrors
 {
-    internal static class ApiErrors
+    public static (int StatusCode, object Body) Map(Exception ex) => ex switch
     {
-        public static IActionResult From(Exception ex)
-        {
-            return ex switch
-            {
-                NotFoundException n => new NotFoundObjectResult(new { Message = n.Message }),
-                BadRequestException b => new BadRequestObjectResult(new { Message = b.Message }),
-                StatusAlreadyExistsException s => new ConflictObjectResult(new { Message = s.Message }),
-                InvalidOperationException i => new ObjectResult(new { Message = i.Message })
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError
-                },
-                _ => new ObjectResult(new { Message = "حدث خطأ غير متوقع." })
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError
-                }
-            };
-        }
+        NotFoundException n => (StatusCodes.Status404NotFound, new { Message = n.Message }),
+        BadRequestException b => (StatusCodes.Status400BadRequest, new { Message = b.Message }),
+        UnauthorizedException u => (StatusCodes.Status401Unauthorized, new { Message = u.Message }),
+        StatusAlreadyExistsException s => (StatusCodes.Status409Conflict, new { Message = s.Message }),
+        InvalidOperationException i => (StatusCodes.Status400BadRequest, new { Message = i.Message }),
+        _ => (StatusCodes.Status500InternalServerError, new { Message = "حدث خطأ غير متوقع." })
+    };
+
+    public static IActionResult From(Exception ex)
+    {
+        var (statusCode, body) = Map(ex);
+        return new ObjectResult(body) { StatusCode = statusCode };
     }
 }

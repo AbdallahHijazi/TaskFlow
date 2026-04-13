@@ -1,8 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using System;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.Features.Statuses.Commands;
 using TaskFlow.Infrastructure;
-using TaskFlow.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +25,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseStaticFiles();
 
