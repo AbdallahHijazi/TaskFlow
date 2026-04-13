@@ -17,7 +17,9 @@ namespace TaskFlow.Domain.Entities
         public decimal? Progress { get; set; }
         public bool? IsAISuggested { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public Guid? CreatedBy { get; set; }
+        public Guid? UpdatedBy { get; set; }
         public bool? IsActive { get; set; }
         public string? Color { get; set; }
         public string? Icon { get; set; }

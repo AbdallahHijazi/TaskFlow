@@ -18,5 +18,7 @@ namespace TaskFlow.Application.DTOs.Task
         public Guid AssignedToId { get; set; }
         public Guid CreatedById { get; set; }
         public Guid? ImageId { get; set; }
+        /// <summary>يُعبأ عند التحديث (PUT) لتحديد من عدّل السجل؛ يُتجاهل عند الإنشاء.</summary>
+        public Guid? UpdatedById { get; set; }
     }
 }

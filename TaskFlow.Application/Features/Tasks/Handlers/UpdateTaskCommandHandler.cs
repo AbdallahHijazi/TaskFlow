@@ -43,6 +43,8 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
             task.AssignedToId = request.Dto.AssignedToId;
             task.CreatedBy = request.Dto.CreatedById;
             task.ImageId = request.Dto.ImageId;
+            task.UpdatedAt = DateTime.UtcNow;
+            task.UpdatedBy = request.Dto.UpdatedById;
 
             _repository.Update(task);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -59,7 +61,9 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                 InitiativeId = task.InitiativeId,
                 AssignedToId = task.AssignedToId,
                 CreatedById = task.CreatedBy ?? Guid.Empty,
-                ImageId = task.ImageId
+                ImageId = task.ImageId,
+                UpdatedAt = task.UpdatedAt,
+                UpdatedById = task.UpdatedBy
             };
         }
     }

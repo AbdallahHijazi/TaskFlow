@@ -37,7 +37,9 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Progress = i.Progress,
                     IsAISuggested = i.IsAISuggested,
                     ImageId = i.ImageId,
-                    CreatedBy = i.CreatedBy
+                    CreatedBy = i.CreatedBy,
+                    UpdatedAt = i.UpdatedAt,
+                    UpdatedBy = i.UpdatedBy
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 

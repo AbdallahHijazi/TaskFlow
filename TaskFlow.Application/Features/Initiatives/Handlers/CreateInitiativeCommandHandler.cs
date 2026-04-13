@@ -51,7 +51,9 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Progress = initiative.Progress,
                     IsAISuggested = initiative.IsAISuggested,
                     ImageId = initiative.ImageId,
-                    CreatedBy = initiative.CreatedBy
+                    CreatedBy = initiative.CreatedBy,
+                    UpdatedAt = initiative.UpdatedAt,
+                    UpdatedBy = initiative.UpdatedBy
                 };
             }
             catch (Exception)

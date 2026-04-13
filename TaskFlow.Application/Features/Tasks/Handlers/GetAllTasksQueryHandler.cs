@@ -37,7 +37,9 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     InitiativeId = t.InitiativeId,
                     AssignedToId = t.AssignedToId,
                     CreatedById = t.CreatedBy ?? Guid.Empty,
-                    ImageId = t.ImageId
+                    ImageId = t.ImageId,
+                    UpdatedAt = t.UpdatedAt,
+                    UpdatedById = t.UpdatedBy
                 })
                 .ToListAsync(cancellationToken);
 

@@ -40,6 +40,8 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             initiative.Progress = request.Dto.Progress;
             initiative.IsAISuggested = request.Dto.IsAISuggested;
             initiative.ImageId = request.Dto.ImageId;
+            initiative.UpdatedAt = DateTime.UtcNow;
+            initiative.UpdatedBy = request.Dto.UpdatedBy;
 
             _repository.Update(initiative);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -54,7 +56,9 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                 Progress = initiative.Progress,
                 IsAISuggested = initiative.IsAISuggested,
                 ImageId = initiative.ImageId,
-                CreatedBy = initiative.CreatedBy
+                CreatedBy = initiative.CreatedBy,
+                UpdatedAt = initiative.UpdatedAt,
+                UpdatedBy = initiative.UpdatedBy
             };
         }
     }

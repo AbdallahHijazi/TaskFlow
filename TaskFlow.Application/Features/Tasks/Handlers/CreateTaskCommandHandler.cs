@@ -54,7 +54,9 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     InitiativeId = task.InitiativeId,
                     AssignedToId = task.AssignedToId,
                     CreatedById = task.CreatedBy ?? Guid.Empty,
-                    ImageId = task.ImageId
+                    ImageId = task.ImageId,
+                    UpdatedAt = task.UpdatedAt,
+                    UpdatedById = task.UpdatedBy
                 };
             }
             catch (Exception)
