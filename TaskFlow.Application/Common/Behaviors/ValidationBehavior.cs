@@ -1,6 +1,5 @@
 using FluentValidation;
 using MediatR;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.Application.Common.Behaviors;
 
@@ -31,8 +30,13 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
             if (failures.Count != 0)
             {
-                var message = string.Join(" | ", failures.Select(f => f.ErrorMessage).Distinct());
-                throw new BadRequestException(message);
+                var groupedErrors = failures
+                    .GroupBy(f => f.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(f => f.ErrorMessage).Distinct().ToArray());
+
+                throw new TaskFlow.Domain.Exceptions.ValidationException("Validation failed.", groupedErrors);
             }
         }
 

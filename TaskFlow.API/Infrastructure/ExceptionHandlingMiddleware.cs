@@ -27,7 +27,8 @@ public sealed class ExceptionHandlingMiddleware
             if (context.Response.HasStarted)
                 throw;
 
-            var (statusCode, body) = ApiErrors.Map(ex);
+            var traceId = context.TraceIdentifier;
+            var (statusCode, body) = ApiErrors.Map(ex, traceId);
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json; charset=utf-8";
             await JsonSerializer.SerializeAsync(context.Response.Body, body, JsonOptions, context.RequestAborted);
