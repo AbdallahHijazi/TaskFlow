@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
 
@@ -11,6 +12,12 @@ namespace TaskFlow.API.Controllers.Users;
 [Authorize]
 public class UsersController : ControllerBase
 {
+    private static readonly HashSet<string> ElevatedRoles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Admin",
+        "Manager"
+    };
+
     private readonly IMediator _mediator;
 
     public UsersController(IMediator mediator)
@@ -60,6 +67,9 @@ public class UsersController : ControllerBase
         [FromQuery] string sortBy = "createdAt",
         [FromQuery] string sortDirection = "desc")
     {
+        if (!CanAccessUserData(id))
+            return Forbid();
+
         var parameters = new UserTasksQueryParametersDto
         {
             PageNumber = pageNumber,
@@ -84,8 +94,26 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserProfileWithTasks(Guid id)
     {
+        if (!CanAccessUserData(id))
+            return Forbid();
+
         var result = await _mediator.Send(new GetUserProfileWithTasksQuery(id));
         return Ok(result);
+    }
+
+    private bool CanAccessUserData(Guid requestedUserId)
+    {
+        if (IsElevatedRole())
+            return true;
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(userIdClaim, out var currentUserId) && currentUserId == requestedUserId;
+    }
+
+    private bool IsElevatedRole()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        return !string.IsNullOrWhiteSpace(role) && ElevatedRoles.Contains(role);
     }
 
     [HttpPut("{id}")]
