@@ -17,6 +17,7 @@ namespace TaskFlow.Infrastructure.Persistence
         public DbSet<TaskItem> Tasks => Set<TaskItem>();
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -28,6 +28,7 @@ namespace TaskFlow.Infrastructure
             services.AddScoped<IImageFileStorage, LocalImageFileStorage>();
             services.AddSingleton<IUserPasswordHasher, UserPasswordHasher>();
             services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+            services.AddSingleton<IAuthSettingsProvider, AuthSettingsProvider>();
 
             return services;
         }

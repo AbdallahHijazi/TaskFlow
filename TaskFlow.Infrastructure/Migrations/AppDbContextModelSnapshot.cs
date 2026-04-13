@@ -182,6 +182,41 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.ToTable("Role", (string)null);
                 });
 
+            modelBuilder.Entity("TaskFlow.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshToken", (string)null);
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.Entities.Status", b =>
                 {
                     b.Property<Guid>("Id")
@@ -449,6 +484,17 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("TaskFlow.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("TaskFlow.Domain.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.Entities.User", b =>
                 {
                     b.HasOne("TaskFlow.Domain.Entities.Image", "Image")
@@ -515,6 +561,8 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Navigation("AssignedTasks");
 
                     b.Navigation("Comments");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("UploadedImages");
                 });

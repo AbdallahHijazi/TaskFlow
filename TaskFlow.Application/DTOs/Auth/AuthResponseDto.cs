@@ -3,7 +3,9 @@ namespace TaskFlow.Application.DTOs.Auth;
 public class AuthResponseDto
 {
     public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
     public DateTime ExpiresAtUtc { get; set; }
+    public DateTime RefreshTokenExpiresAtUtc { get; set; }
     public Guid UserId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
