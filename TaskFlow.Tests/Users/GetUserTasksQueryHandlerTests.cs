@@ -78,6 +78,7 @@ public class GetUserTasksQueryHandlerTests
         var statusA = Guid.NewGuid();
         var statusB = Guid.NewGuid();
         var initiativeA = Guid.NewGuid();
+        context.Initiatives.Add(new Initiative { Id = initiativeA, Name = "Platform Revamp" });
 
         context.Users.Add(new User { Id = userId, Name = "User A", Email = "a@test.com", Password = "x" });
         context.Tasks.AddRange(
@@ -120,7 +121,7 @@ public class GetUserTasksQueryHandlerTests
                 Priority = 3,
                 FromDate = new DateTime(2026, 1, 1),
                 ToDate = new DateTime(2026, 1, 31),
-                Search = "design",
+                Search = "platform",
                 SortBy = "priority",
                 SortDirection = "desc"
             }),

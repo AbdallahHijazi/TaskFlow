@@ -64,7 +64,8 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
             var search = request.Parameters.Search.Trim().ToLower();
             query = query.Where(t =>
                 (t.Name != null && t.Name.ToLower().Contains(search)) ||
-                (t.Description != null && t.Description.ToLower().Contains(search)));
+                (t.Description != null && t.Description.ToLower().Contains(search)) ||
+                (t.Initiative != null && t.Initiative.Name != null && t.Initiative.Name.ToLower().Contains(search)));
         }
 
         var sortBy = request.Parameters.SortBy.Trim().ToLower();
