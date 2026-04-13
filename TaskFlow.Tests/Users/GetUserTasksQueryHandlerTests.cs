@@ -117,6 +117,7 @@ public class GetUserTasksQueryHandlerTests
             {
                 Status = statusA,
                 InitiativeId = initiativeA,
+                Priority = 3,
                 FromDate = new DateTime(2026, 1, 1),
                 ToDate = new DateTime(2026, 1, 31),
                 Search = "design",

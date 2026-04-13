@@ -42,6 +42,9 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
         if (request.Parameters.InitiativeId.HasValue)
             query = query.Where(t => t.InitiativeId == request.Parameters.InitiativeId.Value);
 
+        if (request.Parameters.Priority.HasValue)
+            query = query.Where(t => t.Priority == request.Parameters.Priority.Value);
+
         if (request.Parameters.FromDate.HasValue)
             query = query.Where(t => t.StartDate.HasValue && t.StartDate.Value.Date >= request.Parameters.FromDate.Value.Date);
 

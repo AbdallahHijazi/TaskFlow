@@ -6,6 +6,7 @@ public class UserTasksQueryParametersDto
     public int PageSize { get; set; } = 20;
     public Guid? Status { get; set; }
     public Guid? InitiativeId { get; set; }
+    public int? Priority { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string? Search { get; set; }
