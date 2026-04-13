@@ -53,6 +53,15 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}/profile-with-tasks")]
+    [ProducesResponseType(typeof(UserProfileWithTasksDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserProfileWithTasks(Guid id)
+    {
+        var result = await _mediator.Send(new GetUserProfileWithTasksQuery(id));
+        return Ok(result);
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
     {
