@@ -1,9 +1,8 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.DTOs.Initiative;
 using TaskFlow.Application.Features.Initiatives.Commands;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.API.Controllers.Initiatives
 {
@@ -19,7 +18,7 @@ namespace TaskFlow.API.Controllers.Initiatives
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateInitiativeDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateInitiativeDto dto)
         {
             if (dto == null)
                 return BadRequest(new { Message = "بيانات المبادرة مطلوبة" });
@@ -31,7 +30,7 @@ namespace TaskFlow.API.Controllers.Initiatives
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -45,7 +44,7 @@ namespace TaskFlow.API.Controllers.Initiatives
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -57,18 +56,14 @@ namespace TaskFlow.API.Controllers.Initiatives
                 var result = await _mediator.Send(new GetInitiativeByIdQuery(id));
                 return Ok(result);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id,CreateInitiativeDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] CreateInitiativeDto dto)
         {
             if (dto == null)
                 return BadRequest(new { Message = "بيانات التحديث مطلوبة" });
@@ -78,13 +73,9 @@ namespace TaskFlow.API.Controllers.Initiatives
                 var result = await _mediator.Send(new UpdateInitiativeCommand(id, dto));
                 return Ok(new { Message = "تم تحديث المبادرة بنجاح", Data = result });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -93,16 +84,12 @@ namespace TaskFlow.API.Controllers.Initiatives
         {
             try
             {
-                var success = await _mediator.Send(new DeleteInitiativeCommand(id));
-                return Ok(new { Message = "تم حذف المبادرة بنجاح" });
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
+                await _mediator.Send(new DeleteInitiativeCommand(id));
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
     }

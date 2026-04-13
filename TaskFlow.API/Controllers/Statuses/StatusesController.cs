@@ -1,9 +1,8 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.DTOs.Status;
 using TaskFlow.Application.Features.Statuses.Commands;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.API.Controllers.Statuses
 {
@@ -31,7 +30,7 @@ namespace TaskFlow.API.Controllers.Statuses
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -45,7 +44,7 @@ namespace TaskFlow.API.Controllers.Statuses
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -57,13 +56,9 @@ namespace TaskFlow.API.Controllers.Statuses
                 var result = await _mediator.Send(new GetStatusByIdQuery(id));
                 return Ok(result);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -78,13 +73,9 @@ namespace TaskFlow.API.Controllers.Statuses
                 var result = await _mediator.Send(new UpdateStatusCommand(id, dto));
                 return Ok(new { Message = "تم تحديث الحالة بنجاح", Data = result });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -93,19 +84,12 @@ namespace TaskFlow.API.Controllers.Statuses
         {
             try
             {
-                var success = await _mediator.Send(new DeleteStatusCommand(id));
-                if (success)
-                    return Ok(new { Message = "تم حذف الحالة بنجاح" });
-
-                return BadRequest(new { Message = "فشل في حذف الحالة" });
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
+                await _mediator.Send(new DeleteStatusCommand(id));
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
     }

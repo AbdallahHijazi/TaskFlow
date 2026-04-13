@@ -1,9 +1,8 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.API.Controllers.Users
 {
@@ -31,7 +30,7 @@ namespace TaskFlow.API.Controllers.Users
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -45,7 +44,7 @@ namespace TaskFlow.API.Controllers.Users
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -57,13 +56,9 @@ namespace TaskFlow.API.Controllers.Users
                 var result = await _mediator.Send(new GetUserByIdQuery(id));
                 return Ok(result);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -78,13 +73,9 @@ namespace TaskFlow.API.Controllers.Users
                 var result = await _mediator.Send(new UpdateUserCommand(id, dto));
                 return Ok(new { Message = "تم تحديث المستخدم بنجاح", Data = result });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -93,16 +84,12 @@ namespace TaskFlow.API.Controllers.Users
         {
             try
             {
-                var success = await _mediator.Send(new DeleteUserCommand(id));
-                return Ok(new { Message = "تم حذف المستخدم بنجاح" });
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
+                await _mediator.Send(new DeleteUserCommand(id));
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
     }

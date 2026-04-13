@@ -1,8 +1,7 @@
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.Features.Images.Commands;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.API.Controllers.Images
 {
@@ -32,13 +31,9 @@ namespace TaskFlow.API.Controllers.Images
                 var result = await _mediator.Send(new CreateImageCommand(stream, file.FileName, file.ContentType ?? string.Empty));
                 return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
             }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -52,7 +47,7 @@ namespace TaskFlow.API.Controllers.Images
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -64,13 +59,9 @@ namespace TaskFlow.API.Controllers.Images
                 var result = await _mediator.Send(new GetImageByIdQuery(id));
                 return Ok(result);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -82,13 +73,9 @@ namespace TaskFlow.API.Controllers.Images
                 var file = await _mediator.Send(new GetImageFileQuery(id));
                 return File(file.Stream, file.ContentType, file.DownloadName, enableRangeProcessing: true);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -105,17 +92,9 @@ namespace TaskFlow.API.Controllers.Images
                 var result = await _mediator.Send(new UpdateImageCommand(id, stream, file.FileName, file.ContentType ?? string.Empty));
                 return Ok(new { Message = "تم تحديث الصورة بنجاح", Data = result });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
-            }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -124,19 +103,12 @@ namespace TaskFlow.API.Controllers.Images
         {
             try
             {
-                var success = await _mediator.Send(new DeleteImageCommand(id));
-                if (success)
-                    return Ok(new { Message = "تم حذف الصورة بنجاح" });
-
-                return BadRequest(new { Message = "فشل في حذف الصورة" });
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { ex.Message });
+                await _mediator.Send(new DeleteImageCommand(id));
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return ApiErrors.From(ex);
             }
         }
     }

@@ -1,9 +1,8 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Infrastructure;
 using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.Features.Tasks.Commands;
-using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.API.Controllers.Tasks
 {
@@ -31,7 +30,7 @@ namespace TaskFlow.API.Controllers.Tasks
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -45,7 +44,7 @@ namespace TaskFlow.API.Controllers.Tasks
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -57,13 +56,9 @@ namespace TaskFlow.API.Controllers.Tasks
                 var result = await _mediator.Send(new GetTaskByIdQuery(id));
                 return Ok(result);
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -78,13 +73,9 @@ namespace TaskFlow.API.Controllers.Tasks
                 var result = await _mediator.Send(new UpdateTaskCommand(id, dto));
                 return Ok(new { Message = "تم تحديث المهمة بنجاح", Data = result });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
 
@@ -93,16 +84,12 @@ namespace TaskFlow.API.Controllers.Tasks
         {
             try
             {
-                var success = await _mediator.Send(new DeleteTaskCommand(id));
-                return Ok(new { Message = "تم حذف المهمة بنجاح" });
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
+                await _mediator.Send(new DeleteTaskCommand(id));
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return ApiErrors.From(ex);
             }
         }
     }
