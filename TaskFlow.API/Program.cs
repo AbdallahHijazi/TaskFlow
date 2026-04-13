@@ -1,5 +1,7 @@
+using FluentValidation;
 using TaskFlow.API;
 using TaskFlow.API.Infrastructure;
+using TaskFlow.Application.Common.Behaviors;
 using TaskFlow.Application.Features.Statuses.Commands;
 using TaskFlow.Infrastructure;
 
@@ -10,9 +12,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiPresentation(builder.Configuration);
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddValidatorsFromAssembly(typeof(CreateStatusCommand).Assembly);
 
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(CreateStatusCommand).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(typeof(CreateStatusCommand).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
 
 var app = builder.Build();
 
