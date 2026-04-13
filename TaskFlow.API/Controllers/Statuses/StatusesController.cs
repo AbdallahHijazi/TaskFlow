@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.DTOs.Status;
 using TaskFlow.Application.Features.Statuses.Commands;
@@ -7,6 +8,7 @@ namespace TaskFlow.API.Controllers.Statuses;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class StatusesController : ControllerBase
 {
     private readonly IMediator _mediator;

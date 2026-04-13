@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Application.Features.Images.Commands;
 
@@ -6,6 +7,7 @@ namespace TaskFlow.API.Controllers.Images;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 [RequestFormLimits(MultipartBodyLengthLimit = 20 * 1024 * 1024)]
 [RequestSizeLimit(20 * 1024 * 1024)]
 public class ImagesController : ControllerBase

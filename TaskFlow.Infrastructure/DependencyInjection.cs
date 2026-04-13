@@ -18,6 +18,8 @@ namespace TaskFlow.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
@@ -25,6 +27,7 @@ namespace TaskFlow.Infrastructure
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IImageFileStorage, LocalImageFileStorage>();
             services.AddSingleton<IUserPasswordHasher, UserPasswordHasher>();
+            services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
             return services;
         }
