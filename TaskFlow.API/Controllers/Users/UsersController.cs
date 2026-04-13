@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
 
@@ -40,6 +41,15 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _mediator.Send(new GetUserByIdQuery(id));
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/tasks")]
+    [ProducesResponseType(typeof(List<TaskDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserTasks(Guid id)
+    {
+        var result = await _mediator.Send(new GetUserTasksQuery(id));
         return Ok(result);
     }
 
