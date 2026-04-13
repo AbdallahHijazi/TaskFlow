@@ -63,8 +63,7 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
         query = sortBy switch
         {
             "duedate" => isDescending ? query.OrderByDescending(t => t.EndDate) : query.OrderBy(t => t.EndDate),
-            // 'priority' mapped to progress until explicit priority field exists in model.
-            "priority" => isDescending ? query.OrderByDescending(t => t.Progress) : query.OrderBy(t => t.Progress),
+            "priority" => isDescending ? query.OrderByDescending(t => t.Priority) : query.OrderBy(t => t.Priority),
             _ => isDescending ? query.OrderByDescending(t => t.CreatedAt) : query.OrderBy(t => t.CreatedAt)
         };
 
@@ -80,6 +79,7 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 Progress = t.Progress,
+                Priority = t.Priority,
                 StatusId = t.StatusId,
                 InitiativeId = t.InitiativeId,
                 AssignedToId = t.AssignedToId,

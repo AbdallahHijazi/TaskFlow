@@ -14,6 +14,7 @@ namespace TaskFlow.Application.DTOs.Task
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal? Progress { get; set; }
+        public int? Priority { get; set; }
         public Guid? StatusId { get; set; }
         public Guid? InitiativeId { get; set; }
         public Guid? AssignedToId { get; set; }

@@ -15,6 +15,7 @@ namespace TaskFlow.Domain.Entities
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal? Progress { get; set; }
+        public int? Priority { get; set; }
         public bool? IsAISuggested { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

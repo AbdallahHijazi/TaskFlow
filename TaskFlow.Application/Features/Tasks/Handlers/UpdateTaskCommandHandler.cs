@@ -38,6 +38,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
             task.StartDate = request.Dto.StartDate;
             task.EndDate = request.Dto.EndDate;
             task.Progress = request.Dto.Progress;
+            task.Priority = request.Dto.Priority;
             task.StatusId = request.Dto.StatusId;
             task.InitiativeId = request.Dto.InitiativeId;
             task.AssignedToId = request.Dto.AssignedToId;
@@ -57,6 +58,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                 StartDate = task.StartDate,
                 EndDate = task.EndDate,
                 Progress = task.Progress,
+                Priority = task.Priority,
                 StatusId = task.StatusId,
                 InitiativeId = task.InitiativeId,
                 AssignedToId = task.AssignedToId,

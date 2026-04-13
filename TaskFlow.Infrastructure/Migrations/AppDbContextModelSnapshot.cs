@@ -308,6 +308,9 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("Priority")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("Progress")
                         .HasColumnType("decimal(5,2)");
 

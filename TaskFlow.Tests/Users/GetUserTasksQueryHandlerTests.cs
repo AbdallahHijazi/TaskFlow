@@ -92,7 +92,8 @@ public class GetUserTasksQueryHandlerTests
                 StartDate = new DateTime(2026, 1, 1),
                 EndDate = new DateTime(2026, 1, 10),
                 CreatedAt = new DateTime(2026, 1, 1),
-                Progress = 0.9m
+                Progress = 0.9m,
+                Priority = 3
             },
             new TaskItem
             {
@@ -105,7 +106,8 @@ public class GetUserTasksQueryHandlerTests
                 StartDate = new DateTime(2026, 2, 1),
                 EndDate = new DateTime(2026, 2, 20),
                 CreatedAt = new DateTime(2026, 2, 1),
-                Progress = 0.2m
+                Progress = 0.2m,
+                Priority = 1
             });
         await context.SaveChangesAsync();
 
@@ -118,8 +120,8 @@ public class GetUserTasksQueryHandlerTests
                 FromDate = new DateTime(2026, 1, 1),
                 ToDate = new DateTime(2026, 1, 31),
                 Search = "design",
-                SortBy = "dueDate",
-                SortDirection = "asc"
+                SortBy = "priority",
+                SortDirection = "desc"
             }),
             CancellationToken.None);
 
