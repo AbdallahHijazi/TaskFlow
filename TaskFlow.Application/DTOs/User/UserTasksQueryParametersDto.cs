@@ -7,6 +7,7 @@ public class UserTasksQueryParametersDto
     public Guid? Status { get; set; }
     public Guid? InitiativeId { get; set; }
     public int? Priority { get; set; }
+    public bool? IsOverdue { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public string? Search { get; set; }

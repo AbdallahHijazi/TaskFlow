@@ -130,6 +130,45 @@ public class GetUserTasksQueryHandlerTests
         Assert.Equal("Design API", result.Items[0].Name);
     }
 
+    [Fact]
+    public async Task Handle_IsOverdueFilter_Works()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        context.Users.Add(new User { Id = userId, Name = "User A", Email = "a@test.com", Password = "x" });
+        context.Tasks.AddRange(
+            new TaskItem
+            {
+                Id = Guid.NewGuid(),
+                Name = "Delayed Task",
+                AssignedToId = userId,
+                EndDate = DateTime.UtcNow.AddDays(-2),
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new TaskItem
+            {
+                Id = Guid.NewGuid(),
+                Name = "Upcoming Task",
+                AssignedToId = userId,
+                EndDate = DateTime.UtcNow.AddDays(2),
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            });
+        await context.SaveChangesAsync();
+
+        var handler = CreateHandler(context);
+        var overdueResult = await handler.Handle(
+            new GetUserTasksQuery(userId, new UserTasksQueryParametersDto { IsOverdue = true }),
+            CancellationToken.None);
+        var nonOverdueResult = await handler.Handle(
+            new GetUserTasksQuery(userId, new UserTasksQueryParametersDto { IsOverdue = false }),
+            CancellationToken.None);
+
+        Assert.Single(overdueResult.Items);
+        Assert.Equal("Delayed Task", overdueResult.Items[0].Name);
+        Assert.Single(nonOverdueResult.Items);
+        Assert.Equal("Upcoming Task", nonOverdueResult.Items[0].Name);
+    }
+
     private static GetUserTasksQueryHandler CreateHandler(AppDbContext context)
     {
         return new GetUserTasksQueryHandler(

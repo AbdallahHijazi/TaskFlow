@@ -45,6 +45,14 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
         if (request.Parameters.Priority.HasValue)
             query = query.Where(t => t.Priority == request.Parameters.Priority.Value);
 
+        if (request.Parameters.IsOverdue.HasValue)
+        {
+            var today = DateTime.UtcNow.Date;
+            query = request.Parameters.IsOverdue.Value
+                ? query.Where(t => t.EndDate.HasValue && t.EndDate.Value.Date < today)
+                : query.Where(t => !t.EndDate.HasValue || t.EndDate.Value.Date >= today);
+        }
+
         if (request.Parameters.FromDate.HasValue)
             query = query.Where(t => t.StartDate.HasValue && t.StartDate.Value.Date >= request.Parameters.FromDate.Value.Date);
 
