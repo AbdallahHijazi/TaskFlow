@@ -15,11 +15,16 @@ namespace TaskFlow.Application.Features.Users.Handlers
     {
         private readonly IRepository<User> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserPasswordHasher _passwordHasher;
 
-        public CreateUserCommandHandler(IRepository<User> repository, IUnitOfWork unitOfWork)
+        public CreateUserCommandHandler(
+            IRepository<User> repository,
+            IUnitOfWork unitOfWork,
+            IUserPasswordHasher passwordHasher)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -47,7 +52,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 {
                     Name = request.Dto.Name.Trim(),
                     Email = request.Dto.Email.Trim().ToLower(),
-                    Password = request.Dto.Password,         
+                    Password = _passwordHasher.HashPassword(request.Dto.Password),
                     PhoneNumber = request.Dto.PhoneNumber?.Trim(),
                     RoleId = request.Dto.RoleId
                 };

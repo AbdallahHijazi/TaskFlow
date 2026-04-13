@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Persistence.Repositories;
+using TaskFlow.Infrastructure.Security;
 using TaskFlow.Infrastructure.Storage;
 
 namespace TaskFlow.Infrastructure
@@ -23,6 +24,7 @@ namespace TaskFlow.Infrastructure
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IImageFileStorage, LocalImageFileStorage>();
+            services.AddSingleton<IUserPasswordHasher, UserPasswordHasher>();
 
             return services;
         }
