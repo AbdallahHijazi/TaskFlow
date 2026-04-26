@@ -66,8 +66,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
                 IsRevoked = false
             };
 
-            _refreshTokenRepository.Add(refreshToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            //_refreshTokenRepository.Add(refreshToken);
+            //await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var roleName = user.Role?.RoleName ?? "User";
             return _jwtTokenGenerator.Generate(user, roleName, refreshTokenString, refreshTokenExpiresAtUtc);

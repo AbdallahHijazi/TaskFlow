@@ -94,7 +94,7 @@ public class GetUserTasksQueryHandlerTests
                 EndDate = new DateTime(2026, 1, 10),
                 CreatedAt = new DateTime(2026, 1, 1),
                 Progress = 0.9m,
-                Priority = 3
+
             },
             new TaskItem
             {
@@ -108,7 +108,6 @@ public class GetUserTasksQueryHandlerTests
                 EndDate = new DateTime(2026, 2, 20),
                 CreatedAt = new DateTime(2026, 2, 1),
                 Progress = 0.2m,
-                Priority = 1
             });
         await context.SaveChangesAsync();
 

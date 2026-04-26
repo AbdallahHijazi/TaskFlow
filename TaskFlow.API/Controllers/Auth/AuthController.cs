@@ -27,7 +27,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(new LoginCommand(dto));
         return Ok(result);
     }
-
+        
     [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)

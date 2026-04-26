@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
+using TaskFlow.Domain.Interfaces;
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Persistence.Repositories;
 using TaskFlow.Infrastructure.Security;

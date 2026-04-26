@@ -1,8 +1,10 @@
 using FluentValidation;
 using TaskFlow.API;
 using TaskFlow.API.Infrastructure;
+using TaskFlow.API.Services;
 using TaskFlow.Application.Common.Behaviors;
 using TaskFlow.Application.Features.Statuses.Commands;
+using TaskFlow.Domain.Interfaces;
 using TaskFlow.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiPresentation(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddValidatorsFromAssembly(typeof(CreateStatusCommand).Assembly);

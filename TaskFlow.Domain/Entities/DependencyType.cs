@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskFlow.Domain.Common;
 
 namespace TaskFlow.Domain.Entities
 {
-    public class DependencyType
+    public class DependencyType : BaseEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string? Name { get; set; }

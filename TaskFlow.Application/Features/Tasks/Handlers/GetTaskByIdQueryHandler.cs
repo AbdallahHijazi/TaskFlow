@@ -35,7 +35,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     StartDate = t.StartDate,
                     EndDate = t.EndDate,
                     Progress = t.Progress,
-                    Priority = t.Priority,
+                    //Priority = t.Priority,
                     StatusId = t.StatusId,
                     InitiativeId = t.InitiativeId,
                     AssignedToId = t.AssignedToId,
