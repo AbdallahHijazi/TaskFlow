@@ -7,13 +7,13 @@ internal static class ApiErrors
 {
     public static (int StatusCode, ApiErrorResponse Body) Map(Exception ex, string traceId) => ex switch
     {
-        ValidationException v => (StatusCodes.Status400BadRequest, Build(v.Message, "VALIDATION_ERROR", traceId, v.Errors)),
-        NotFoundException n => (StatusCodes.Status404NotFound, Build(n.Message, "NOT_FOUND", traceId)),
-        BadRequestException b => (StatusCodes.Status400BadRequest, Build(b.Message, "BAD_REQUEST", traceId)),
-        UnauthorizedException u => (StatusCodes.Status401Unauthorized, Build(u.Message, "UNAUTHORIZED", traceId)),
-        StatusAlreadyExistsException s => (StatusCodes.Status409Conflict, Build(s.Message, "CONFLICT", traceId)),
-        InvalidOperationException i => (StatusCodes.Status400BadRequest, Build(i.Message, "INVALID_OPERATION", traceId)),
-        _ => (StatusCodes.Status500InternalServerError, Build("حدث خطأ غير متوقع.", "INTERNAL_SERVER_ERROR", traceId))
+        ValidationException v => (StatusCodes.Status400BadRequest, Build(v.Message, "400", traceId, v.Errors)),
+        NotFoundException n => (StatusCodes.Status404NotFound, Build(n.Message, "404", traceId)),
+        BadRequestException b => (StatusCodes.Status400BadRequest, Build(b.Message, "400", traceId)),
+        UnauthorizedException u => (StatusCodes.Status401Unauthorized, Build(u.Message, "401", traceId)),
+        StatusAlreadyExistsException s => (StatusCodes.Status409Conflict, Build(s.Message, "409", traceId)),
+        InvalidOperationException i => (StatusCodes.Status400BadRequest, Build(i.Message, "400", traceId)),
+        _ => (StatusCodes.Status500InternalServerError, Build("حدث خطأ غير متوقع.", "500", traceId))
     };
 
     public static IActionResult From(Exception ex)

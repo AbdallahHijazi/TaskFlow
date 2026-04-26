@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TaskFlow.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,12 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,7 +34,13 @@ namespace TaskFlow.Infrastructure.Migrations
                 columns: table => new
                 {
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RoleCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -43,7 +54,12 @@ namespace TaskFlow.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Color = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -56,9 +72,13 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    TaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    TaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -77,7 +97,12 @@ namespace TaskFlow.Infrastructure.Migrations
                     UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UploadedById = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ThumbnailPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Thumbnail = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Thumbnail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -94,7 +119,12 @@ namespace TaskFlow.Infrastructure.Migrations
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    ImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -124,15 +154,17 @@ namespace TaskFlow.Infrastructure.Migrations
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Progress = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
                     IsAISuggested = table.Column<bool>(type: "bit", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Icon = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     StatusId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     AssignedToId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    ImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -158,6 +190,29 @@ namespace TaskFlow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RefreshToken",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(500)", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ExpiresAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false),
+                    RevokedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshToken_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Task",
                 columns: table => new
                 {
@@ -168,8 +223,6 @@ namespace TaskFlow.Infrastructure.Migrations
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Progress = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
                     IsAISuggested = table.Column<bool>(type: "bit", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: true),
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Icon = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -177,7 +230,12 @@ namespace TaskFlow.Infrastructure.Migrations
                     ImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     StatusId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     AssignedToId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -221,7 +279,12 @@ namespace TaskFlow.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DependencyTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     PredecessorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    SuccessorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    SuccessorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -275,6 +338,17 @@ namespace TaskFlow.Infrastructure.Migrations
                 name: "IX_Initiative_StatusId",
                 table: "Initiative",
                 column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_Token",
+                table: "RefreshToken",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_UserId",
+                table: "RefreshToken",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Task_AssignedToId",
@@ -360,6 +434,9 @@ namespace TaskFlow.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Comment");
+
+            migrationBuilder.DropTable(
+                name: "RefreshToken");
 
             migrationBuilder.DropTable(
                 name: "TaskDependency");

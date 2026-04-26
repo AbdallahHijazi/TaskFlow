@@ -29,13 +29,15 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleD
             throw new BadRequestException("اسم الدور مطلوب");
 
         role.RoleName = request.Dto.RoleName.Trim();
+        role.RoleCode = request.Dto.RoleCode.Trim();
         _repository.Update(role);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RoleDto
         {
             RoleId = role.RoleId,
-            RoleName = role.RoleName
+            RoleName = role.RoleName,
+            RoleCode = role.RoleCode
         };
     }
 }

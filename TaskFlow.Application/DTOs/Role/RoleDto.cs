@@ -10,5 +10,6 @@ namespace TaskFlow.Application.DTOs.Role
     {
         public Guid RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;
+        public string RoleCode { get; set; } = string.Empty;
     }
 }

@@ -31,7 +31,8 @@ namespace TaskFlow.Application.Features.Roles.Handlers
 
                 var role = new Role
                 {
-                    RoleName = request.Dto.RoleName.Trim()
+                    RoleName = request.Dto.RoleName.Trim(),
+                    RoleCode = request.Dto.RoleCode.Trim()
                 };
 
                 _repository.Add(role);
@@ -40,7 +41,8 @@ namespace TaskFlow.Application.Features.Roles.Handlers
                 return new RoleDto
                 {
                     RoleId = role.RoleId,
-                    RoleName = role.RoleName
+                    RoleName = role.RoleName,
+                    RoleCode = role.RoleCode
                 };
             }
             catch (Exception)

@@ -9,5 +9,7 @@ namespace TaskFlow.Application.DTOs.Role
     public class CreateRoleDto
     {
         public string RoleName { get; set; } = string.Empty;
+        public string RoleCode { get; set; } = string.Empty;
+
     }
 }
