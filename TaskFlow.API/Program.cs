@@ -63,7 +63,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapGet("/", () => "TaskFlow API is running");
 app.Run();
 
 public partial class Program { }
