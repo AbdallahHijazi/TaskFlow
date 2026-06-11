@@ -26,7 +26,8 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "https://taskflow-app-1md.pages.dev" 
+                "http://localhost:4200",
+                "https://taskflow-app-1md.pages.dev"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
