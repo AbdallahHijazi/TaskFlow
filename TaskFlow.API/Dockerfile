@@ -1,14 +1,14 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore "../TaskFlow.sln"
-RUN dotnet publish "TaskFlow.API.csproj" -c Release -o /app/publish
+RUN dotnet restore "TaskFlow.sln"
+RUN dotnet publish "TaskFlow.API/TaskFlow.API.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
