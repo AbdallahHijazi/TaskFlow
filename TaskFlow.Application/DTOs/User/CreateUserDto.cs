@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,5 +15,6 @@ namespace TaskFlow.Application.DTOs.User
         public string ConfirmPassword { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public Guid RoleId { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }

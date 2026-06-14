@@ -9,5 +9,10 @@ public class UserProfileWithTasksDto
     public Guid RoleId { get; set; }
     public string RoleName { get; set; } = string.Empty;
     public int TotalTasksCount { get; set; }
+    public Guid ImageId { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public Guid? UpdatedById { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public Guid CreatedById { get; set; }
     public List<UserTaskSummaryDto> Tasks { get; set; } = [];
 }

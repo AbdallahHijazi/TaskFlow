@@ -13,18 +13,26 @@ using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.Application.Features.Initiatives.Handlers
 {
-    public class UpdateInitiativeCommandHandler : IRequestHandler<UpdateInitiativeCommand, InitiativeDto>
+    public class UpdateInitiativeCommandHandler
+    : IRequestHandler<UpdateInitiativeCommand, InitiativeDto>
     {
         private readonly IRepository<Initiative> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService _imageService;
 
-        public UpdateInitiativeCommandHandler(IRepository<Initiative> repository, IUnitOfWork unitOfWork)
+        public UpdateInitiativeCommandHandler(
+            IRepository<Initiative> repository,
+            IUnitOfWork unitOfWork,
+            IImageService imageService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _imageService = imageService;
         }
 
-        public async Task<InitiativeDto> Handle(UpdateInitiativeCommand request, CancellationToken cancellationToken)
+        public async Task<InitiativeDto> Handle(
+            UpdateInitiativeCommand request,
+            CancellationToken cancellationToken)
         {
             var initiative = await _repository.GetAll()
                 .Where(i => i.Id == request.Id)
@@ -39,9 +47,19 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             initiative.EndDate = request.Dto.EndDate;
             initiative.Progress = request.Dto.Progress;
             initiative.IsAISuggested = request.Dto.IsAISuggested;
-            initiative.ImageId = request.Dto.ImageId;
-            initiative.UpdatedAt = DateTime.UtcNow;
-            initiative.UpdatedBy = request.Dto.UpdatedBy;
+            initiative.StatusId = request.Dto.StatusId;
+            initiative.AssignedToId = request.Dto.AssignedTo;
+            initiative.Color = request.Dto.Color;
+            initiative.Icon = request.Dto.Icon;
+
+            if (request.Dto.Image != null && request.Dto.Image.Length > 0)
+            {
+                var newImageId = await _imageService.SaveImageAsync(
+                    request.Dto.Image,
+                    cancellationToken);
+
+                initiative.ImageId = newImageId;
+            }
 
             _repository.Update(initiative);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -55,10 +73,11 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                 EndDate = initiative.EndDate,
                 Progress = initiative.Progress,
                 IsAISuggested = initiative.IsAISuggested,
-                ImageId = initiative.ImageId,
-                CreatedBy = initiative.CreatedBy,
-                UpdatedAt = initiative.UpdatedAt,
-                UpdatedBy = initiative.UpdatedBy
+                AssignedTo = initiative.AssignedToId ?? Guid.Empty,
+                Color = initiative.Color,
+                Icon = initiative.Icon,
+                StatusId = initiative.StatusId ?? Guid.Empty,
+                ImageId = initiative.ImageId
             };
         }
     }

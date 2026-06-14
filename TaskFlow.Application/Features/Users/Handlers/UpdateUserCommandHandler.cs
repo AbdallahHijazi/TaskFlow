@@ -1,10 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
@@ -17,11 +12,16 @@ namespace TaskFlow.Application.Features.Users.Handlers
     {
         private readonly IRepository<User> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService _imageService;
 
-        public UpdateUserCommandHandler(IRepository<User> repository, IUnitOfWork unitOfWork)
+        public UpdateUserCommandHandler(
+            IRepository<User> repository,
+            IUnitOfWork unitOfWork,
+            IImageService imageService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _imageService = imageService;
         }
 
         public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -48,6 +48,15 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 if (request.Dto.RoleId != Guid.Empty)
                     user.RoleId = request.Dto.RoleId;
 
+                if (request.Dto.Image != null && request.Dto.Image.Length > 0)
+                {
+                    var imageId = await _imageService.SaveImageAsync(
+                        request.Dto.Image,
+                        cancellationToken);
+
+                    user.ImageId = imageId;
+                }
+
                 _repository.Update(user);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -57,7 +66,8 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     Name = user.Name,
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
-                    RoleId = user.RoleId ?? Guid.Empty
+                    RoleId = user.RoleId ?? Guid.Empty,
+                    ImageId = user.ImageId ?? Guid.Empty,
                 };
             }
             catch (NotFoundException)

@@ -11,9 +11,9 @@ namespace TaskFlow.Application.Features.Tasks.Commands
     public class UpdateTaskCommand : IRequest<TaskDto>
     {
         public Guid Id { get; set; }
-        public CreateTaskDto Dto { get; set; }
+        public UpdateTaskDto Dto { get; set; }
 
-        public UpdateTaskCommand(Guid id, CreateTaskDto dto)
+        public UpdateTaskCommand(Guid id, UpdateTaskDto dto)
         {
             Id = id;
             Dto = dto;

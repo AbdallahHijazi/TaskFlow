@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Task;
@@ -8,55 +8,46 @@ using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.Application.Features.Tasks.Handlers
 {
-    public class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand, TaskDto>
+    public class UpdateTaskStatusCommandHandler : IRequestHandler<UpdateTaskStatusCommand, TaskDto>
     {
-        private readonly IRepository<TaskItem> _repository;
+        private readonly IRepository<TaskItem> _taskRepository;
+        private readonly IRepository<Status> _statusRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IImageService _imageService;
 
-        public UpdateTaskCommandHandler(
-            IRepository<TaskItem> repository,
-            IUnitOfWork unitOfWork,
-            IImageService imageService)
+        public UpdateTaskStatusCommandHandler(
+            IRepository<TaskItem> taskRepository,
+            IRepository<Status> statusRepository,
+            IUnitOfWork unitOfWork)
         {
-            _repository = repository;
+            _taskRepository = taskRepository;
+            _statusRepository = statusRepository;
             _unitOfWork = unitOfWork;
-            _imageService = imageService;
         }
 
-        public async Task<TaskDto> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)
+        public async Task<TaskDto> Handle(UpdateTaskStatusCommand request, CancellationToken cancellationToken)
         {
-            var task = await _repository.GetAll()
+            var task = await _taskRepository.GetAll()
                 .Where(t => t.Id == request.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (task == null)
                 throw new NotFoundException("المهمة", request.Id);
 
-            task.Name = request.Dto.Name.Trim();
-            task.Description = request.Dto.Description?.Trim();
-            task.StartDate = request.Dto.StartDate;
-            task.EndDate = request.Dto.EndDate;
-            task.Progress = request.Dto.Progress;
-            task.StatusId = request.Dto.StatusId;
-            task.InitiativeId = request.Dto.InitiativeId;
-            task.AssignedToId = request.Dto.AssignedToId;
-            task.Color = request.Dto.Color;
-            task.Icon = request.Dto.Icon;
-
-            if (request.Dto.Image != null && request.Dto.Image.Length > 0)
+            if (request.Dto.StatusId.HasValue)
             {
-                var imageId = await _imageService.SaveImageAsync(
-                    request.Dto.Image,
-                    cancellationToken);
+                var statusExists = await _statusRepository.GetAll()
+                    .AnyAsync(s => s.Id == request.Dto.StatusId.Value, cancellationToken);
 
-                task.ImageId = imageId;
+                if (!statusExists)
+                    throw new NotFoundException("الحالة", request.Dto.StatusId.Value);
             }
 
-            _repository.Update(task);
+            task.StatusId = request.Dto.StatusId;
+
+            _taskRepository.Update(task);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return await _repository.GetAll()
+            return await _taskRepository.GetAll()
                 .Where(t => t.Id == task.Id)
                 .Select(t => new TaskDto
                 {
@@ -72,8 +63,8 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     InitiativeName = t.Initiative == null ? null : t.Initiative.Name,
                     AssignedToId = t.AssignedToId,
                     AssignedToName = t.AssignedTo == null ? null : t.AssignedTo.Name,
-                    Color = t.Color,
                     Icon = t.Icon,
+                    Color = t.Color,
                     CreatedById = t.CreatedBy ?? Guid.Empty,
                     ImageId = t.ImageId,
                     ImageUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/file",

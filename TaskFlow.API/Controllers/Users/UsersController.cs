@@ -28,7 +28,7 @@ public class UsersController : ControllerBase
 
     [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+    public async Task<IActionResult> Create([FromForm] CreateUserDto dto)
     {
         if (dto == null)
             return BadRequest(new { Message = "بيانات المستخدم مطلوبة" });

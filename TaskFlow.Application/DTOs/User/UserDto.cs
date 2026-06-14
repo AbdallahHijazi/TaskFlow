@@ -14,5 +14,10 @@ namespace TaskFlow.Application.DTOs.User
         public string? PhoneNumber { get; set; }
         public Guid RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;   
+        public Guid ImageId { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public Guid? UpdatedById { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid? CreatedById { get; set; }
     }
 }
