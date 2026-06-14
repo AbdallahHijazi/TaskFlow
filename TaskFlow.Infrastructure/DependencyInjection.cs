@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
+using TaskFlow.Application.Common.Services;
 using TaskFlow.Domain.Interfaces;
 using TaskFlow.Infrastructure.AI;
 using TaskFlow.Infrastructure.Persistence;
@@ -33,6 +34,7 @@ namespace TaskFlow.Infrastructure
             services.AddSingleton<IUserPasswordHasher, UserPasswordHasher>();
             services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
             services.AddSingleton<IAuthSettingsProvider, AuthSettingsProvider>();
+            services.AddScoped<IImageService, ImageService>();
             services.Configure<OllamaOptions>(
                      configuration.GetSection("Ollama"));
 

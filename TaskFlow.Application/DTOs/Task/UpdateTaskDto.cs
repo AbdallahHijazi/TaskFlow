@@ -1,13 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace TaskFlow.Application.DTOs.Task
 {
-    public class CreateTaskDto
+    public class UpdateTaskDto
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
@@ -20,6 +15,5 @@ namespace TaskFlow.Application.DTOs.Task
         public string Color { get; set; } = "#FFFFFF";
         public string Icon { get; set; } = "";
         public IFormFile? Image { get; set; }
-
     }
 }

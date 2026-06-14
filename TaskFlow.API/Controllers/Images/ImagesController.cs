@@ -52,6 +52,13 @@ public class ImagesController : ControllerBase
         return File(file.Stream, file.ContentType, file.DownloadName, enableRangeProcessing: true);
     }
 
+    [HttpGet("{id:guid}/thumbnail")]
+    public async Task<IActionResult> GetThumbnail(Guid id)
+    {
+        var file = await _mediator.Send(new GetImageFileQuery(id, preferThumbnail: true));
+        return File(file.Stream, file.ContentType, file.DownloadName, enableRangeProcessing: true);
+    }
+
     [HttpPut("{id:guid}")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(Guid id, IFormFile file)

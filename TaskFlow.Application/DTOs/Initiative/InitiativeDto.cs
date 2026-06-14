@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,9 +16,15 @@ namespace TaskFlow.Application.DTOs.Initiative
         public DateTime? EndDate { get; set; }
         public decimal? Progress { get; set; }
         public bool? IsAISuggested { get; set; }
+        public string Icon { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public Guid? StatusId { get; set; }
+        public Guid? AssignedTo { get; set; }
         public Guid? ImageId { get; set; }
         public Guid? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Guid? UpdatedBy { get; set; }
+        public IFormFile? Image { get; set; }
+
     }
 }

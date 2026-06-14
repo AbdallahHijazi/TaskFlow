@@ -24,13 +24,19 @@ namespace TaskFlow.Application.Features.Images.Handlers
             var image = await _repository.GetAll()
                 .AsNoTracking()
                 .Where(i => i.Id == request.Id)
-                .Select(i => new { i.FilePath, i.MediaType, i.FileName })
+                .Select(i => new { i.FilePath, i.ThumbnailPath, i.MediaType, i.FileName })
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (image == null || string.IsNullOrWhiteSpace(image.FilePath))
                 throw new NotFoundException("الصورة", request.Id);
 
-            var stream = await _fileStorage.OpenReadAsync(image.FilePath!, cancellationToken);
+            Stream? stream = null;
+            if (request.PreferThumbnail && !string.IsNullOrWhiteSpace(image.ThumbnailPath))
+            {
+                stream = await _fileStorage.OpenReadAsync(image.ThumbnailPath!, cancellationToken);
+            }
+
+            stream ??= await _fileStorage.OpenReadAsync(image.FilePath!, cancellationToken);
             if (stream == null)
                 throw new NotFoundException("الصورة", request.Id);
 

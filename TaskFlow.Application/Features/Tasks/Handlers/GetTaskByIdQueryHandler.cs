@@ -39,10 +39,23 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     StatusId = t.StatusId,
                     InitiativeId = t.InitiativeId,
                     AssignedToId = t.AssignedToId,
+                    Color = t.Color,
+                    Icon=t.Icon,
                     CreatedById = t.CreatedBy ?? Guid.Empty,
                     ImageId = t.ImageId,
+                    ImageUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/file",
+                    ThumbnailUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/thumbnail",
+                    FilePath = null,
+                    ImageFileName = t.Image == null ? null : t.Image.FileName,
+                    ImageContentType = t.Image == null ? null : t.Image.MediaType,
+                    ImageSizeInBytes = t.Image == null ? null : t.Image.SizeInBytes,
                     UpdatedAt = t.UpdatedAt,
-                    UpdatedById = t.UpdatedBy
+                    UpdatedById = t.UpdatedBy,
+                    StatusName = t.Status == null || string.IsNullOrWhiteSpace(t.Status.Name) ? "Unknown Status" : t.Status.Name,
+                    InitiativeName = t.Initiative == null ? null : t.Initiative.Name,
+                    AssignedToName = t.AssignedTo == null ? null : t.AssignedTo.Name,
+                    IsAISuggested = t.IsAISuggested,
+                    
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 

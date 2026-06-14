@@ -19,7 +19,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateInitiativeDto dto)
+    public async Task<IActionResult> Create([FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
             return BadRequest(new { Message = "بيانات المبادرة مطلوبة" });
@@ -43,7 +43,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] CreateInitiativeDto dto)
+    public async Task<IActionResult> Update(Guid id, [FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
             return BadRequest(new { Message = "بيانات التحديث مطلوبة" });
