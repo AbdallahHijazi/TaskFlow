@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Application.DTOs.Lookup;
 using TaskFlow.Application.Features.Lookups.Commands;
 
 namespace TaskFlow.API.Controllers.Lookups
@@ -61,7 +62,7 @@ namespace TaskFlow.API.Controllers.Lookups
         [HttpGet("task-style-options")]
         public IActionResult GetTaskStyleOptions()
         {
-            var colors = new List<TaskFlow.Application.DTOs.Lookup.LookupItemDto>
+            var colors = new List<KeyValueLookupDto>
             {
                 new() { Key = "#2563EB", Value = "Blue" },
                 new() { Key = "#16A34A", Value = "Green" },
@@ -73,7 +74,7 @@ namespace TaskFlow.API.Controllers.Lookups
                 new() { Key = "#DB2777", Value = "Pink" }
             };
 
-            var icons = new List<TaskFlow.Application.DTOs.Lookup.LookupItemDto>
+            var icons = new List<KeyValueLookupDto>
             {
                 new() { Key = "ti ti-checklist", Value = "Checklist" },
                 new() { Key = "ti ti-clipboard-list", Value = "Clipboard List" },

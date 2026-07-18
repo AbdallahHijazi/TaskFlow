@@ -26,7 +26,8 @@ public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, RoleDto
         return new RoleDto
         {
             RoleId = role.RoleId,
-            RoleName = role.RoleName ?? string.Empty
+            RoleName = role.RoleName ?? string.Empty,
+            RoleCode = role.RoleCode 
         };
     }
 }

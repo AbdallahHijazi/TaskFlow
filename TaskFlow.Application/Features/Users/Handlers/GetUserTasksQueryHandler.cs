@@ -1,4 +1,4 @@
-using MediatR;
+    using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Task;
@@ -85,9 +85,11 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
             .Take(pageSize)
             .Select(t => new TaskDto
             {
+
                 Id = t.Id,
                 Name = t.Name ?? string.Empty,
                 Description = t.Description,
+                
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 Progress = t.Progress,

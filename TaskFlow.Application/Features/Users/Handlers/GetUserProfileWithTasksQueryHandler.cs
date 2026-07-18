@@ -49,6 +49,12 @@ public class GetUserProfileWithTasksQueryHandler : IRequestHandler<GetUserProfil
             RoleId = user.RoleId ?? Guid.Empty,
             RoleName = user.Role?.RoleName ?? string.Empty,
             TotalTasksCount = tasks.Count,
+            ImageId = user.ImageId ?? Guid.Empty,
+            UpdatedAt = user.UpdatedAt,
+            UpdatedById = user.UpdatedBy,
+            CreatedAt = user.CreatedAt,
+            CreatedById = user.CreatedBy ?? Guid.Empty,
+
             Tasks = tasks
         };
     }
