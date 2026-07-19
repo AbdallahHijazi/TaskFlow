@@ -37,6 +37,21 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize]
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetCurrentUserProfile()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var user = await _mediator.Send(new GetUserByIdQuery(userId));
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

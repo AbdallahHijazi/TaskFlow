@@ -17,4 +17,12 @@
     <ProjectReference Include="..\TaskFlow.Domain\TaskFlow.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="AI\Interfaces\" />
+    <Folder Include="AI\Context\" />
+    <Folder Include="AI\Validators\" />
+    <Folder Include="AI\Services\" />
+    <Folder Include="AI\Prompts\" />
+  </ItemGroup>
+
 </Project>
