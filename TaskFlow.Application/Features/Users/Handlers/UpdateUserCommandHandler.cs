@@ -68,6 +68,9 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     PhoneNumber = user.PhoneNumber,
                     RoleId = user.RoleId ?? Guid.Empty,
                     ImageId = user.ImageId ?? Guid.Empty,
+                    UpdatedAt=user.UpdatedAt,
+                    CreatedAt=user.CreatedAt,
+                    CreatedById=user.CreatedBy
                 };
             }
             catch (NotFoundException)

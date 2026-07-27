@@ -27,7 +27,7 @@ namespace TaskFlow.Application.Features.Lookups.Handlers
                 .Select(dt => new LookupItemDto
                 {
                     Id = dt.Id,
-                    Name = dt.Name ?? string.Empty
+                    Name = dt.Name ?? string.Empty,
                 })
                 .ToListAsync(cancellationToken);
             return dependencyTypes;
