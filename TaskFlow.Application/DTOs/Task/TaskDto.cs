@@ -19,7 +19,7 @@ namespace TaskFlow.Application.DTOs.Task
         public string? Icon { get; set; }
         public Guid? StatusId { get; set; }
         public string? StatusName { get; set; }
-        public Guid? InitiativeId { get; set; }
+        public Guid InitiativeId { get; set; }
         public string? InitiativeName { get; set; }
         public Guid? AssignedToId { get; set; }
         public string? AssignedToName { get; set; }

@@ -10,7 +10,7 @@ namespace TaskFlow.Application.DTOs.Task
         public DateTime? EndDate { get; set; }
         public decimal Progress { get; set; } = 0;
         public Guid StatusId { get; set; }
-        public Guid? InitiativeId { get; set; }
+        public Guid InitiativeId { get; set; }
         public Guid AssignedToId { get; set; }
         public string Color { get; set; } = "#FFFFFF";
         public string Icon { get; set; } = "";

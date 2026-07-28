@@ -21,6 +21,7 @@ namespace TaskFlow.Infrastructure.Persistence.Configurations
             builder.HasOne(e => e.Initiative)
                     .WithMany(i => i.Tasks)
                     .HasForeignKey(e => e.InitiativeId)
+                    .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(e => e.Image)
