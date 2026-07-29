@@ -7,12 +7,14 @@ using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.AI;
 using TaskFlow.Application.DTOs.AI.CriticalTaskAnalysis;
 using TaskFlow.Application.DTOs.AI.InitiativeGeneration;
+using TaskFlow.Application.DTOs.AI.RiskAnalysis;
 using TaskFlow.Application.DTOs.AI.TaskGeneration;
 using TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Commands;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Commands;
+using TaskFlow.Application.Features.AI.RiskAnalysis.Commands;
 using TaskFlow.Application.Features.AI.TaskGeneration.Commands;
 
-namespace TaskFlow.API.Controllers;
+namespace TaskFlow.API.Controllers.AI;
 [AllowAnonymous]
 [ApiController]
 [Route("api/ai")]
@@ -124,6 +126,19 @@ public class AiController : ControllerBase
         var result = await _mediator.Send(
             new AnalyzeCriticalTasksCommand(request),
             cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("analyze-risks")]
+    public async Task<IActionResult> AnalyzeRisks(
+    AnalyzeRisksRequest request,
+    CancellationToken cancellationToken)
+    {
+        var result =
+            await _mediator.Send(
+                new AnalyzeRisksCommand(request),
+                cancellationToken);
 
         return Ok(result);
     }

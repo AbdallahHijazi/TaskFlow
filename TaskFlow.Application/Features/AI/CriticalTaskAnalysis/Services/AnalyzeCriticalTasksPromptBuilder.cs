@@ -108,7 +108,9 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Services
                 - Return valid JSON only.
                 - Do not return markdown, comments, or explanations outside JSON.
                 - Do not return null or undefined values.
-
+                - Return only the top 20-30% most critical tasks when there are many tasks.
+                - Do not mark many tasks as Critical unless there is strong evidence from the provided data.
+                - Prefer identifying the most impactful tasks instead of assigning high scores to all tasks.
                 Return exactly this JSON structure:
 
                 {

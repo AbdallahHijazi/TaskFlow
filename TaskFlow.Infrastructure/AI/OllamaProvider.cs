@@ -64,7 +64,16 @@ namespace TaskFlow.Infrastructure.AI
                 ollamaRequest,
                 cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            //response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var error =
+                    await response.Content.ReadAsStringAsync(
+                        cancellationToken);
+
+                throw new Exception(
+                    $"Ollama Error: {error}");
+            }
 
             var result =
                 await response.Content.ReadFromJsonAsync<OllamaChatResponse>(
