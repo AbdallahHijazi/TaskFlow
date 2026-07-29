@@ -5,8 +5,10 @@ using TaskFlow.Application.AI.Models;
 using TaskFlow.Application.AI.Providers;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.AI;
+using TaskFlow.Application.DTOs.AI.CriticalTaskAnalysis;
 using TaskFlow.Application.DTOs.AI.InitiativeGeneration;
 using TaskFlow.Application.DTOs.AI.TaskGeneration;
+using TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Commands;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Commands;
 using TaskFlow.Application.Features.AI.TaskGeneration.Commands;
 
@@ -108,6 +110,19 @@ public class AiController : ControllerBase
     {
         var result = await _mediator.Send(
             new SaveGeneratedTasksCommand(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("analyze-critical-tasks")]
+    public async Task<ActionResult<CriticalTasksAnalysisResponse>>
+    AnalyzeCriticalTasks(
+        [FromBody] AnalyzeCriticalTasksRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new AnalyzeCriticalTasksCommand(request),
             cancellationToken);
 
         return Ok(result);
