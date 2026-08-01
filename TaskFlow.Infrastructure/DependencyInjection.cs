@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskFlow.Application.AI.Providers;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.Common.Services;
 using TaskFlow.Domain.Interfaces;
@@ -35,16 +36,37 @@ namespace TaskFlow.Infrastructure
             services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
             services.AddSingleton<IAuthSettingsProvider, AuthSettingsProvider>();
             services.AddScoped<IImageService, ImageService>();
-            services.Configure<OllamaOptions>(
-                     configuration.GetSection("Ollama"));
 
-            services.AddHttpClient<IAiChatService, OllamaChatService>((sp, client) =>
-            {
-                var options = sp.GetRequiredService<IOptions<OllamaOptions>>().Value;
 
-                client.BaseAddress = new Uri(options.BaseUrl);
-                client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
-            });
+            services.Configure<OllamaOptions>
+                (configuration.GetSection("Ollama"));
+
+            services.AddHttpClient<IAiChatService, OllamaChatService>(
+                (serviceProvider, httpClient) =>
+                {
+                    var options = serviceProvider
+                        .GetRequiredService<IOptions<OllamaOptions>>()
+                        .Value;
+
+                    httpClient.BaseAddress = new Uri(options.BaseUrl);
+                    httpClient.Timeout =
+                        TimeSpan.FromSeconds(options.TimeoutSeconds);
+                }
+            );
+
+
+            services.AddHttpClient<ILLMProvider, OllamaProvider>(
+                (serviceProvider, httpClient) =>
+                {
+                    var options = serviceProvider
+                        .GetRequiredService<IOptions<OllamaOptions>>()
+                        .Value;
+
+                    httpClient.BaseAddress = new Uri(options.BaseUrl);
+                    httpClient.Timeout =
+                        TimeSpan.FromSeconds(options.TimeoutSeconds);
+                });
+
             return services;
         }
     }

@@ -16,10 +16,12 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
         private readonly IRepository<TaskItem> _repository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService _imageService;
+        private readonly IRepository<Initiative> _initiativeRepository;
 
-        public CreateTaskCommandHandler(IRepository<TaskItem> repository, IUnitOfWork unitOfWork,IImageService imageService)
+        public CreateTaskCommandHandler(IRepository<TaskItem> repository, IRepository<Initiative> initiativeRepository, IUnitOfWork unitOfWork,IImageService imageService)
         {
             _repository = repository;
+            _initiativeRepository = initiativeRepository;
             _unitOfWork = unitOfWork;
             _imageService = imageService;
         }
@@ -33,7 +35,18 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                 {
                     imageId = await _imageService.SaveImageAsync(request.Dto.Image, cancellationToken);
                 }
+                var initiativeExists = await _initiativeRepository
+                    .GetAll()
+                    .AnyAsync(
+                                i => i.Id == request.Dto.InitiativeId,
+                                cancellationToken
+                    );
 
+                if (!initiativeExists)
+                {
+                    throw new InvalidOperationException(
+                        "المبادرة المحددة غير موجودة.");
+                }
                 var task = new TaskItem
                 {
                     Name = request.Dto.Name.Trim(),
@@ -83,6 +96,10 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                         IsAISuggested = t.IsAISuggested
                     })
                     .FirstAsync(cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception)
             {
