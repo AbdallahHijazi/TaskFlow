@@ -37,6 +37,10 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Progress = i.Progress,
                     IsAISuggested = i.IsAISuggested,
                     ImageId = i.ImageId,
+                    AssignedTo = i.AssignedToId,
+                    Color = i.Color!,
+                    Icon = i.Icon!,
+                    StatusId = i.StatusId,
                     CreatedBy = i.CreatedBy,
                     UpdatedAt = i.UpdatedAt,
                     UpdatedBy = i.UpdatedBy

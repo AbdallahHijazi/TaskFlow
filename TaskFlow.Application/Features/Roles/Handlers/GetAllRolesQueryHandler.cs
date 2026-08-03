@@ -23,7 +23,8 @@ public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, List<Ro
             .Select(r => new RoleDto
             {
                 RoleId = r.RoleId,
-                RoleName = r.RoleName ?? string.Empty
+                RoleName = r.RoleName ?? string.Empty,  
+                RoleCode = r.RoleCode ?? string.Empty
             })
             .ToListAsync(cancellationToken);
     }

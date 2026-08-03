@@ -388,7 +388,7 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Property<Guid?>("ImageId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("InitiativeId")
+                    b.Property<Guid>("InitiativeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("IsAISuggested")
@@ -585,7 +585,8 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.HasOne("TaskFlow.Domain.Entities.Initiative", "Initiative")
                         .WithMany("Tasks")
                         .HasForeignKey("InitiativeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("TaskFlow.Domain.Entities.TaskItem", "Parent")
                         .WithMany("Children")

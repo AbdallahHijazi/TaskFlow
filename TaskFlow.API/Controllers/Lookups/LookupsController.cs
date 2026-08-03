@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Application.DTOs.Lookup;
 using TaskFlow.Application.Features.Lookups.Commands;
 
 namespace TaskFlow.API.Controllers.Lookups
@@ -56,6 +57,36 @@ namespace TaskFlow.API.Controllers.Lookups
         {
             var lookups = await middleware.Send(new GetDependencyTypeLookupsQuery());
             return Ok(lookups);
+        }
+
+        [HttpGet("task-style-options")]
+        public IActionResult GetTaskStyleOptions()
+        {
+            var colors = new List<KeyValueLookupDto>
+            {
+                new() { Key = "#2563EB", Value = "Blue" },
+                new() { Key = "#16A34A", Value = "Green" },
+                new() { Key = "#F59E0B", Value = "Amber" },
+                new() { Key = "#DC2626", Value = "Red" },
+                new() { Key = "#7C3AED", Value = "Violet" },
+                new() { Key = "#0F766E", Value = "Teal" },
+                new() { Key = "#475569", Value = "Slate" },
+                new() { Key = "#DB2777", Value = "Pink" }
+            };
+
+            var icons = new List<KeyValueLookupDto>
+            {
+                new() { Key = "ti ti-checklist", Value = "Checklist" },
+                new() { Key = "ti ti-clipboard-list", Value = "Clipboard List" },
+                new() { Key = "ti ti-calendar-event", Value = "Calendar Event" },
+                new() { Key = "ti ti-flag", Value = "Flag" },
+                new() { Key = "ti ti-target-arrow", Value = "Target" },
+                new() { Key = "ti ti-bolt", Value = "Bolt" },
+                new() { Key = "ti ti-code", Value = "Code" },
+                new() { Key = "ti ti-users", Value = "Users" }
+            };
+
+            return Ok(new { Colors = colors, Icons = icons });
         }
     }
 }

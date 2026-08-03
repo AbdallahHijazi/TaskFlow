@@ -1,10 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.Features.Tasks.Commands;
@@ -17,11 +12,16 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
     {
         private readonly IRepository<TaskItem> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService _imageService;
 
-        public UpdateTaskCommandHandler(IRepository<TaskItem> repository, IUnitOfWork unitOfWork)
+        public UpdateTaskCommandHandler(
+            IRepository<TaskItem> repository,
+            IUnitOfWork unitOfWork,
+            IImageService imageService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _imageService = imageService;
         }
 
         public async Task<TaskDto> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)
@@ -38,35 +38,55 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
             task.StartDate = request.Dto.StartDate;
             task.EndDate = request.Dto.EndDate;
             task.Progress = request.Dto.Progress;
-            //task.Priority = request.Dto.Priority;
             task.StatusId = request.Dto.StatusId;
             task.InitiativeId = request.Dto.InitiativeId;
             task.AssignedToId = request.Dto.AssignedToId;
-            task.CreatedBy = request.Dto.CreatedById;
-            task.ImageId = request.Dto.ImageId;
-            task.UpdatedAt = DateTime.UtcNow;
-            task.UpdatedBy = request.Dto.UpdatedById;
+            task.Color = request.Dto.Color;
+            task.Icon = request.Dto.Icon;
+
+            if (request.Dto.Image != null && request.Dto.Image.Length > 0)
+            {
+                var imageId = await _imageService.SaveImageAsync(
+                    request.Dto.Image,
+                    cancellationToken);
+
+                task.ImageId = imageId;
+            }
 
             _repository.Update(task);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new TaskDto
-            {
-                Id = task.Id,
-                Name = task.Name,
-                Description = task.Description,
-                StartDate = task.StartDate,
-                EndDate = task.EndDate,
-                Progress = task.Progress,
-                //Priority = task.Priority,
-                StatusId = task.StatusId,
-                InitiativeId = task.InitiativeId,
-                AssignedToId = task.AssignedToId,
-                CreatedById = task.CreatedBy ?? Guid.Empty,
-                ImageId = task.ImageId,
-                UpdatedAt = task.UpdatedAt,
-                UpdatedById = task.UpdatedBy
-            };
+            return await _repository.GetAll()
+                .Where(t => t.Id == task.Id)
+                .Select(t => new TaskDto
+                {
+                    Id = t.Id,
+                    Name = t.Name ?? string.Empty,
+                    Description = t.Description,
+                    StartDate = t.StartDate,
+                    EndDate = t.EndDate,
+                    Progress = t.Progress,
+                    StatusId = t.StatusId,
+                    StatusName = t.Status == null || string.IsNullOrWhiteSpace(t.Status.Name) ? "Unknown Status" : t.Status.Name,
+                    InitiativeId = t.InitiativeId,
+                    InitiativeName = t.Initiative == null ? null : t.Initiative.Name,
+                    AssignedToId = t.AssignedToId,
+                    AssignedToName = t.AssignedTo == null ? null : t.AssignedTo.Name,
+                    Color = t.Color,
+                    Icon = t.Icon,
+                    CreatedById = t.CreatedBy ?? Guid.Empty,
+                    ImageId = t.ImageId,
+                    ImageUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/file",
+                    ThumbnailUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/thumbnail",
+                    FilePath = null,
+                    ImageFileName = t.Image == null ? null : t.Image.FileName,
+                    ImageContentType = t.Image == null ? null : t.Image.MediaType,
+                    ImageSizeInBytes = t.Image == null ? null : t.Image.SizeInBytes,
+                    UpdatedAt = t.UpdatedAt,
+                    UpdatedById = t.UpdatedBy,
+                    IsAISuggested = t.IsAISuggested
+                })
+                .FirstAsync(cancellationToken);
         }
     }
 }

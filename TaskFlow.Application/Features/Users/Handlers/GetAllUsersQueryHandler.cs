@@ -33,7 +33,13 @@ namespace TaskFlow.Application.Features.Users.Handlers
                         Name = u.Name ?? string.Empty,
                         Email = u.Email ?? string.Empty,
                         PhoneNumber = u.PhoneNumber,
-                        RoleId = u.RoleId ?? Guid.Empty
+                        RoleId = u.RoleId ?? Guid.Empty,
+                        CreatedAt = u.CreatedAt,
+                        CreatedById = u.CreatedBy ?? Guid.Empty,
+                        ImageId = u.ImageId ?? Guid.Empty,
+                        RoleName = u.Role != null ? u.Role.RoleName : string.Empty,
+                        UpdatedAt = u.UpdatedAt,
+                        UpdatedById = u.UpdatedBy ?? Guid.Empty,
                     })
                     .ToListAsync(cancellationToken);
 

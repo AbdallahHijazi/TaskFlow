@@ -28,13 +28,28 @@ public class UsersController : ControllerBase
 
     [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+    public async Task<IActionResult> Create([FromForm] CreateUserDto dto)
     {
         if (dto == null)
             return BadRequest(new { Message = "بيانات المستخدم مطلوبة" });
 
         var result = await _mediator.Send(new CreateUserCommand(dto));
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [Authorize]
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetCurrentUserProfile()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var user = await _mediator.Send(new GetUserByIdQuery(userId));
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
     }
 
     [HttpGet]
@@ -51,21 +66,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Retrieves paged tasks assigned to a user with optional filtering and sorting.
-    /// </summary>
-    /// <param name="id">Target user identifier.</param>
-    /// <param name="pageNumber">Page number (minimum 1).</param>
-    /// <param name="pageSize">Page size between 1 and 100.</param>
-    /// <param name="status">Optional status identifier filter.</param>
-    /// <param name="initiativeId">Optional initiative identifier filter.</param>
-    /// <param name="priority">Optional priority filter (1-5).</param>
-    /// <param name="isOverdue">Optional overdue filter based on due date.</param>
-    /// <param name="fromDate">Optional start date lower bound.</param>
-    /// <param name="toDate">Optional due date upper bound.</param>
-    /// <param name="search">Optional search term for task name, description, and initiative name.</param>
-    /// <param name="sortBy">Sorting field: createdAt, dueDate, priority.</param>
-    /// <param name="sortDirection">Sorting direction: asc or desc.</param>
+
     [HttpGet("{id}/tasks")]
     [ProducesResponseType(typeof(UserTasksPagedResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -138,7 +139,8 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Update(Guid id, [FromForm] UpdateUserDto dto)
     {
         if (dto == null)
             return BadRequest(new { Message = "بيانات التحديث مطلوبة" });

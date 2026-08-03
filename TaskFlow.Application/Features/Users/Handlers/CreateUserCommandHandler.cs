@@ -16,15 +16,18 @@ namespace TaskFlow.Application.Features.Users.Handlers
         private readonly IRepository<User> _repository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserPasswordHasher _passwordHasher;
+        private readonly IImageService imageService;
 
         public CreateUserCommandHandler(
             IRepository<User> repository,
             IUnitOfWork unitOfWork,
-            IUserPasswordHasher passwordHasher)
+            IUserPasswordHasher passwordHasher,
+            IImageService imageService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
+            this.imageService = imageService;
         }
 
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -47,14 +50,15 @@ namespace TaskFlow.Application.Features.Users.Handlers
 
                 if (request.Dto.RoleId == Guid.Empty)
                     throw new InvalidOperationException("يجب اختيار دور للمستخدم");
-
+                var imageId = await imageService.SaveImageAsync(request.Dto.Image,cancellationToken);
                 var user = new User
                 {
                     Name = request.Dto.Name.Trim(),
                     Email = request.Dto.Email.Trim().ToLower(),
                     Password = _passwordHasher.HashPassword(request.Dto.Password),
                     PhoneNumber = request.Dto.PhoneNumber?.Trim(),
-                    RoleId = request.Dto.RoleId
+                    RoleId = request.Dto.RoleId,
+                    ImageId = imageId
                 };
 
                 _repository.Add(user);
@@ -66,7 +70,14 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     Name = user.Name,
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
-                    RoleId = user.RoleId ?? Guid.Empty
+                    RoleId = user.RoleId ?? Guid.Empty,
+                    ImageId = user.ImageId ?? Guid.Empty,
+                    RoleName = user.Role?.RoleName ?? string.Empty,
+                    CreatedAt = user.CreatedAt,
+                    CreatedById = user.CreatedBy,
+                    UpdatedAt = user.UpdatedAt,
+                    UpdatedById=user.UpdatedBy
+
                 };
             }
             catch (InvalidOperationException)

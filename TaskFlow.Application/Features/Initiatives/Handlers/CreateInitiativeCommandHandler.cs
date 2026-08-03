@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskFlow.Application.Common.Interfaces;
+using TaskFlow.Application.Common.Services;
 using TaskFlow.Application.DTOs.Initiative;
 using TaskFlow.Application.Features.Initiatives.Commands;
 using TaskFlow.Domain.Entities;
@@ -15,17 +16,24 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
     {
         private readonly IRepository<Initiative> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService imageService;
 
-        public CreateInitiativeCommandHandler(IRepository<Initiative> repository, IUnitOfWork unitOfWork)
+        public CreateInitiativeCommandHandler(
+            IRepository<Initiative> repository, 
+            IUnitOfWork unitOfWork,
+            IImageService imageService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            this.imageService = imageService;
         }
 
         public async Task<InitiativeDto> Handle(CreateInitiativeCommand request, CancellationToken cancellationToken)
         {
             try
             {
+                var imageId = await imageService.SaveImageAsync(request.Dto.Image, cancellationToken);
+
                 var initiative = new Initiative
                 {
                     Name = request.Dto.Name.Trim(),
@@ -34,8 +42,11 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     EndDate = request.Dto.EndDate,
                     Progress = request.Dto.Progress,
                     IsAISuggested = request.Dto.IsAISuggested,
-                    ImageId = request.Dto.ImageId,
-                    CreatedBy = request.Dto.CreatedBy
+                    AssignedToId = request.Dto.AssignedTo,
+                    Color = request.Dto.Color,
+                    Icon = request.Dto.Icon,
+                    StatusId = request.Dto.StatusId,
+                    ImageId = imageId,
                 };
 
                 _repository.Add(initiative);
@@ -50,10 +61,11 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     EndDate = initiative.EndDate,
                     Progress = initiative.Progress,
                     IsAISuggested = initiative.IsAISuggested,
-                    ImageId = initiative.ImageId,
-                    CreatedBy = initiative.CreatedBy,
-                    UpdatedAt = initiative.UpdatedAt,
-                    UpdatedBy = initiative.UpdatedBy
+                    AssignedTo = initiative.AssignedToId ?? Guid.Empty,
+                    Color = initiative.Color,
+                    Icon = initiative.Icon,
+                    StatusId = initiative.StatusId ?? Guid.Empty,
+                    ImageId = imageId,
                 };
             }
             catch (Exception)

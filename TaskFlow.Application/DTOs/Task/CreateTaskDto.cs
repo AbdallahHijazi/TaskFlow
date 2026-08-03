@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,13 +14,12 @@ namespace TaskFlow.Application.DTOs.Task
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal Progress { get; set; } = 0;
-        //public int? Priority { get; set; }
         public Guid StatusId { get; set; }
         public Guid InitiativeId { get; set; }
         public Guid AssignedToId { get; set; }
-        public Guid CreatedById { get; set; }
-        public Guid? ImageId { get; set; }
-        /// <summary>يُعبأ عند التحديث (PUT) لتحديد من عدّل السجل؛ يُتجاهل عند الإنشاء.</summary>
-        public Guid? UpdatedById { get; set; }
+        public string Color { get; set; } = "#FFFFFF";
+        public string Icon { get; set; } = "";
+        public IFormFile? Image { get; set; }
+
     }
 }

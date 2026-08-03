@@ -21,7 +21,7 @@ namespace TaskFlow.Domain.Entities
         public bool? IsActive { get; set; }
         public string? Color { get; set; }
         public string? Icon { get; set; }
-        public Guid? InitiativeId { get; set; }
+        public Guid InitiativeId { get; set; }
         public Guid? ImageId { get; set; }
         public Guid? StatusId { get; set; }
         public Guid? AssignedToId { get; set; }
