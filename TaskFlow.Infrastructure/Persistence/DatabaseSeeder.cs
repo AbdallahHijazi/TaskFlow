@@ -28,7 +28,10 @@ public static class DatabaseSeeder
             AddDependencyIfMissing(context, dependencyNames, clientId, "Start to Finish", "The successor cannot finish until the predecessor starts.");
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        // Startup seeding has no authenticated tenant context. Every tenant-owned
+        // row above receives its ClientId explicitly, including the legacy
+        // Guid.Empty default client created by AddClientTenancy.
+        await context.SaveSystemChangesAsync(cancellationToken);
     }
 
     private static void AddRoleIfMissing(AppDbContext context, IEnumerable<string> existingCodes, string code, string name)
