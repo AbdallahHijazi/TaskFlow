@@ -5,6 +5,7 @@ using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.Features.Tasks.Commands;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.Tasks.Handlers
 {
@@ -41,8 +42,9 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
             task.StatusId = request.Dto.StatusId;
             task.InitiativeId = request.Dto.InitiativeId;
             task.AssignedToId = request.Dto.AssignedToId;
-            task.Color = request.Dto.Color;
-            task.Icon = request.Dto.Icon;
+            var style = WorkItemStyleDefaults.ForTask(request.Dto.Name, request.Dto.Description, request.Dto.Color, request.Dto.Icon);
+            task.Color = style.Color;
+            task.Icon = style.Icon;
 
             if (request.Dto.Image != null && request.Dto.Image.Length > 0)
             {

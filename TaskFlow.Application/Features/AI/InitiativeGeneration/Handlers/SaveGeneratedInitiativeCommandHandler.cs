@@ -9,6 +9,7 @@ using TaskFlow.Application.DTOs.AI.InitiativeGeneration;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Commands;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 {
@@ -68,6 +69,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                     request.AssignedToId);
             }
 
+            var initiativeStyle = WorkItemStyleDefaults.ForInitiative(request.Name, request.Description, request.Color, request.Icon);
             var initiative = new Initiative
             {
                 Id = Guid.NewGuid(),
@@ -82,8 +84,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 IsAISuggested = true,
                 IsActive = true,
 
-                Color = request.Color.Trim(),
-                Icon = request.Icon.Trim(),
+                Color = initiativeStyle.Color,
+                Icon = initiativeStyle.Icon,
 
                 StatusId = request.StatusId,
                 AssignedToId = request.AssignedToId
@@ -93,6 +95,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 
             foreach (var generatedTask in request.Tasks)
             {
+                var taskStyle = WorkItemStyleDefaults.ForTask(generatedTask.Name, generatedTask.Description, generatedTask.Color, generatedTask.Icon);
                 var task = new TaskItem
                 {
                     Id = Guid.NewGuid(),
@@ -107,8 +110,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                     IsAISuggested = true,
                     IsActive = true,
 
-                    Color = generatedTask.Color.Trim(),
-                    Icon = generatedTask.Icon.Trim(),
+                    Color = taskStyle.Color,
+                    Icon = taskStyle.Icon,
 
                     InitiativeId = initiative.Id,
 

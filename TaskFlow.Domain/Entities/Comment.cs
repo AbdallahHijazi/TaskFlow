@@ -7,9 +7,11 @@ using TaskFlow.Domain.Common;
 
 namespace TaskFlow.Domain.Entities
 {
-    public class Comment : BaseEntity
+    public class Comment : BaseEntity, ITenantEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid ClientId { get; set; }
+        public Client? Client { get; set; }
         public string? Content { get; set; }
         public Guid? UserId { get; set; }
         public Guid? TaskId { get; set; }

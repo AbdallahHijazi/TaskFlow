@@ -10,5 +10,6 @@ namespace TaskFlow.Application.AI.Models
     {
         public string Prompt { get; init; } = string.Empty;
         public string? SystemPrompt { get; init; }
+        public GenerationLanguage? OutputLanguage { get; init; }
     }
 }

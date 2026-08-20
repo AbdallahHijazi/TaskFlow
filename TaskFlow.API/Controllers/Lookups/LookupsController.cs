@@ -88,5 +88,35 @@ namespace TaskFlow.API.Controllers.Lookups
 
             return Ok(new { Colors = colors, Icons = icons });
         }
+
+        [HttpGet("initiative-style-options")]
+        public IActionResult GetInitiativeStyleOptions()
+        {
+            var colors = new List<KeyValueLookupDto>
+            {
+                new() { Key = "#2563EB", Value = "Blue" },
+                new() { Key = "#059669", Value = "Emerald" },
+                new() { Key = "#D97706", Value = "Amber" },
+                new() { Key = "#7C3AED", Value = "Violet" },
+                new() { Key = "#0891B2", Value = "Cyan" },
+                new() { Key = "#BE123C", Value = "Rose" },
+                new() { Key = "#DB2777", Value = "Pink" },
+                new() { Key = "#475569", Value = "Slate" }
+            };
+
+            var icons = new List<KeyValueLookupDto>
+            {
+                new() { Key = "ti ti-rocket", Value = "Rocket" },
+                new() { Key = "ti ti-bulb", Value = "Idea" },
+                new() { Key = "ti ti-target-arrow", Value = "Target" },
+                new() { Key = "ti ti-chart-line", Value = "Growth" },
+                new() { Key = "ti ti-briefcase", Value = "Portfolio" },
+                new() { Key = "ti ti-sparkles", Value = "Sparkles" },
+                new() { Key = "ti ti-school", Value = "Education" },
+                new() { Key = "ti ti-building", Value = "Building" }
+            };
+
+            return Ok(new { Colors = colors, Icons = icons });
+        }
     }
 }

@@ -72,6 +72,11 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
                     "لا توجد مهام ضمن المبادرة لتحليلها.");
             }
 
+            var language = GenerationLanguageDetector.Detect(
+                string.Join(" ", new[] { initiative.Name, initiative.Description }
+                    .Concat(tasks.SelectMany(task => new[] { task.Name, task.Description }))));
+            var languageName = GenerationLanguageDetector.Name(language);
+
             var prompt =
                 AnalyzeCriticalTasksPromptBuilder.Build(
                     initiative,
@@ -81,14 +86,15 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
-                            """
+                            $$"""
                         You analyze critical tasks in project initiatives.
 
                         Use only the tasks provided in the user prompt.
                         Return valid JSON only.
                         Do not return markdown or explanations outside JSON.
-                        Write summary, reasons, and recommendations in clear Arabic.
+                        Write summary, reasons, and recommendations in clear {{languageName}} only.
                         """,
 
                         Prompt = prompt
@@ -118,6 +124,7 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
                     validationErrors,
                     initiative,
                     tasks,
+                    language,
                     cancellationToken);
 
             correctedResponse.InitiativeId = initiative.Id;
@@ -145,9 +152,10 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
         private async Task<CriticalTasksAnalysisResponse>TryCorrectResponseAsync(
                                                                             string originalContent,
                                                                             List<string> validationErrors,
-                                                                            Initiative initiative,
-                                                                            IReadOnlyCollection<TaskItem> tasks,
-                                                                            CancellationToken cancellationToken)
+            Initiative initiative,
+            IReadOnlyCollection<TaskItem> tasks,
+            GenerationLanguage language,
+            CancellationToken cancellationToken)
         {
             var validTasksText =
                 string.Join(
@@ -190,7 +198,7 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
                       26-50 = Medium
                       51-75 = High
                       76-100 = Critical
-                    - Summary, reason, and recommendation must be written in Arabic.
+                    - Summary, reason, and recommendation must be written in {{GenerationLanguageDetector.Name(language)}} only.
                     - If no task is critical, return an empty criticalTasks array.
                     - Do not return null or undefined values.
 
@@ -215,6 +223,7 @@ namespace TaskFlow.Application.Features.AI.CriticalTaskAnalysis.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
                             """
                     You correct invalid critical-task analysis JSON.

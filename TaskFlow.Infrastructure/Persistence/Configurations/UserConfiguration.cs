@@ -24,6 +24,12 @@ namespace TaskFlow.Infrastructure.Persistence.Configurations
                 .WithMany(i => i.Users)
                 .HasForeignKey(e => e.ImageId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(e => e.Client)
+                .WithMany(c => c.Users)
+                .HasForeignKey(e => e.ClientId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

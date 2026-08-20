@@ -24,7 +24,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Validators
                 .WithMessage("وصف المبادرة قصير جدًا.")
                 .MaximumLength(2000)
                 .WithMessage("وصف المبادرة يجب ألا يتجاوز 2000 حرف.")
-                .Must(ContainsInitiativeRequest)
+                .Must(ContainsMeaningfulDescription)
                 .WithMessage(
                     "يرجى كتابة وصف واضح للمبادرة المطلوبة، مثل: أنشئ مبادرة لنظام إدارة عيادة.");
 
@@ -36,7 +36,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Validators
                 .NotEmpty()
                 .WithMessage("المستخدم المسؤول عن المبادرة مطلوب.");
         }
-        private static bool ContainsInitiativeRequest(string? prompt)
+        private static bool ContainsMeaningfulDescription(string? prompt)
         {
             if (string.IsNullOrWhiteSpace(prompt))
             {
@@ -73,33 +73,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Validators
                 .Where(word => !greetingOnlyWords.Contains(word))
                 .ToList();
 
-            if (meaningfulWords.Count < 2)
-            {
-                return false;
-            }
-
-            var initiativeKeywords = new[]
-            {
-                "مبادرة",
-                "مشروع",
-                "نظام",
-                "تطبيق",
-                "منصة",
-                "برنامج",
-                "خدمة",
-                "إنشاء",
-                "انشاء",
-                "تطوير",
-                "إدارة",
-                "ادارة",
-                "أتمتة",
-                "اتمتة"
-            };
-
-            return initiativeKeywords.Any(
-                keyword => normalized.Contains(
-                    keyword,
-                    StringComparison.OrdinalIgnoreCase));
+            return meaningfulWords.Count >= 3
+                && meaningfulWords.Sum(word => word.Length) >= 12;
         }
 
         private static string NormalizeText(string text)

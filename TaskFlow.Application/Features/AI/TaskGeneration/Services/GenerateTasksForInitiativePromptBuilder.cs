@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskFlow.Application.DTOs.AI.TaskGeneration;
+using TaskFlow.Application.AI.Models;
 
 namespace TaskFlow.Application.Features.AI.TaskGeneration.Services
 {
@@ -18,6 +19,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Services
             IReadOnlyCollection<string> existingTaskNames)
         {
             ArgumentNullException.ThrowIfNull(request);
+            var language = GenerationLanguageDetector.Name(GenerationLanguageDetector.Detect(request.Prompt));
 
             var existingTasksText =
                 existingTaskNames.Count == 0
@@ -46,6 +48,8 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Services
         Determine the required number of tasks from the user's wording.
 
         Important rules:
+        - Write every generated task name and description in {{language}} only.
+        - Never switch to Chinese or any other language.
         - If the user clearly requests one task, return exactly one task.
         - If the user requests multiple tasks or suggestions, return between 2 and 4 tasks.
         - Never return more than 4 tasks.
@@ -53,7 +57,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Services
         - Do not include markdown.
         - Do not include explanations or comments.
         - Generate only tasks, not a new initiative.
-        - Use clear and meaningful Arabic names and descriptions.
+        - Use clear and meaningful {{language}} names and descriptions.
         - Generated tasks must be relevant to the initiative and user request.
         - Do not duplicate any existing task.
         - Do not generate duplicate names among the new tasks.

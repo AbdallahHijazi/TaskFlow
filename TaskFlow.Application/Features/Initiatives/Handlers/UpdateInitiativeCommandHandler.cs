@@ -10,6 +10,7 @@ using TaskFlow.Application.DTOs.Initiative;
 using TaskFlow.Application.Features.Initiatives.Commands;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.Initiatives.Handlers
 {
@@ -49,8 +50,9 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             initiative.IsAISuggested = request.Dto.IsAISuggested;
             initiative.StatusId = request.Dto.StatusId;
             initiative.AssignedToId = request.Dto.AssignedTo;
-            initiative.Color = request.Dto.Color;
-            initiative.Icon = request.Dto.Icon;
+            var style = WorkItemStyleDefaults.ForInitiative(request.Dto.Name, request.Dto.Description, request.Dto.Color, request.Dto.Icon);
+            initiative.Color = style.Color;
+            initiative.Icon = style.Icon;
 
             if (request.Dto.Image != null && request.Dto.Image.Length > 0)
             {

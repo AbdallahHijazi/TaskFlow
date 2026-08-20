@@ -5,11 +5,13 @@ using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Persistence.Repositories;
+using TaskFlow.Domain.Interfaces;
 
 namespace TaskFlow.Tests.Users;
 
 public class GetUserProfileWithTasksQueryHandlerTests
 {
+    private static readonly Guid ClientId = Guid.NewGuid();
     [Fact]
     public async Task Handle_UserExists_ReturnsProfileAndTasks()
     {
@@ -21,6 +23,7 @@ public class GetUserProfileWithTasksQueryHandlerTests
         context.Users.Add(new User
         {
             Id = userId,
+            ClientId = ClientId,
             Name = "Ali",
             Email = "ali@test.com",
             Password = "x",
@@ -29,6 +32,7 @@ public class GetUserProfileWithTasksQueryHandlerTests
         context.Tasks.Add(new TaskItem
         {
             Id = Guid.NewGuid(),
+            ClientId = ClientId,
             Name = "Task A",
             AssignedToId = userId,
             EndDate = DateTime.UtcNow.AddDays(2),
@@ -36,7 +40,7 @@ public class GetUserProfileWithTasksQueryHandlerTests
         });
         await context.SaveChangesAsync();
 
-        var handler = new GetUserProfileWithTasksQueryHandler(new GenericRepository<User>(context));
+        var handler = new GetUserProfileWithTasksQueryHandler(new GenericRepository<User>(context), new TestCurrentUser(ClientId));
         var result = await handler.Handle(new GetUserProfileWithTasksQuery(userId), CancellationToken.None);
 
         Assert.Equal(userId, result.Id);
@@ -49,7 +53,7 @@ public class GetUserProfileWithTasksQueryHandlerTests
     public async Task Handle_UserNotFound_ThrowsNotFound()
     {
         await using var context = CreateContext();
-        var handler = new GetUserProfileWithTasksQueryHandler(new GenericRepository<User>(context));
+        var handler = new GetUserProfileWithTasksQueryHandler(new GenericRepository<User>(context), new TestCurrentUser(ClientId));
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(new GetUserProfileWithTasksQuery(Guid.NewGuid()), CancellationToken.None));
@@ -61,6 +65,12 @@ public class GetUserProfileWithTasksQueryHandlerTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        return new AppDbContext(options);
+        return new AppDbContext(options, new TestCurrentUser(ClientId));
+    }
+
+    private sealed record TestCurrentUser(Guid TenantId) : ICurrentUserService
+    {
+        public Guid? UserId => null;
+        public Guid? ClientId => TenantId;
     }
 }

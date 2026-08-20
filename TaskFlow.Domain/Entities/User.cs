@@ -17,8 +17,10 @@ namespace TaskFlow.Domain.Entities
         public string? PhoneNumber { get; set; }
         public Guid? RoleId { get; set; }
         public Guid? ImageId { get; set; }
+        public Guid ClientId { get; set; }
         public Role? Role { get; set; }
         public Image? Image { get; set; }
+        public Client? Client { get; set; }
         public ICollection<Image> UploadedImages { get; set; } = new List<Image>();
         public ICollection<Initiative> AssignedInitiatives { get; set; } = new List<Initiative>();
         public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();

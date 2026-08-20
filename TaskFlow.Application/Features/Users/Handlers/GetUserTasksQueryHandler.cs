@@ -13,18 +13,21 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
 {
     private readonly IRepository<User> _usersRepository;
     private readonly IRepository<TaskItem> _tasksRepository;
+    private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
-    public GetUserTasksQueryHandler(IRepository<User> usersRepository, IRepository<TaskItem> tasksRepository)
+    public GetUserTasksQueryHandler(IRepository<User> usersRepository, IRepository<TaskItem> tasksRepository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
     {
         _usersRepository = usersRepository;
         _tasksRepository = tasksRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<UserTasksPagedResultDto> Handle(GetUserTasksQuery request, CancellationToken cancellationToken)
     {
+        var clientId = _currentUser.ClientId ?? throw new UnauthorizedException("Your session does not contain a client. Please sign in again.");
         var userExists = await _usersRepository.GetAll()
             .AsNoTracking()
-            .AnyAsync(u => u.Id == request.UserId, cancellationToken);
+            .AnyAsync(u => u.Id == request.UserId && u.ClientId == clientId, cancellationToken);
 
         if (!userExists)
             throw new NotFoundException("المستخدم", request.UserId);
@@ -42,8 +45,7 @@ public class GetUserTasksQueryHandler : IRequestHandler<GetUserTasksQuery, UserT
         if (request.Parameters.InitiativeId.HasValue)
             query = query.Where(t => t.InitiativeId == request.Parameters.InitiativeId.Value);
 
-        if (request.Parameters.Priority.HasValue)
-            //query = query.Where(t => t.Priority == request.Parameters.Priority.Value);
+        // Priority is not currently stored on TaskItem. Keep the parameter for API compatibility.
 
         if (request.Parameters.IsOverdue.HasValue)
         {

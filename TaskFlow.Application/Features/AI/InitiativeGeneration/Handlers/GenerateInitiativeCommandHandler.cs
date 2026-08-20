@@ -11,6 +11,7 @@ using TaskFlow.Application.DTOs.AI.InitiativeGeneration;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Commands;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Services;
 using TaskFlow.Application.Features.AI.InitiativeGeneration.Validators;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 {
@@ -39,6 +40,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
         {
             ArgumentNullException.ThrowIfNull(request);
             ArgumentNullException.ThrowIfNull(request.Request);
+            var language = GenerationLanguageDetector.Detect(request.Request.Prompt);
+            var languageName = GenerationLanguageDetector.Name(language);
 
             var prompt =
                 GenerateInitiativePromptBuilder.Build(
@@ -48,14 +51,15 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
-                            """
+                            $$"""
                         You generate structured initiative plans.
 
                         Return valid JSON only.
                         Do not return markdown.
                         Do not return explanations.
-                        Use clear and meaningful Arabic language.
+                        Use {{languageName}} only. Never switch languages.
                         """,
 
                         Prompt = prompt
@@ -64,10 +68,12 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 
             var firstResult =
                 DeserializeResponse(firstResponse.Content);
+            ApplyStyleDefaults(firstResult);
 
             var firstValidationErrors =
                 GeneratedInitiativePreviewValidator.Validate(
                     firstResult);
+            AddLanguageErrors(firstResult, language, firstValidationErrors);
 
             if (firstValidationErrors.Count == 0)
             {
@@ -79,11 +85,14 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 await TryCorrectResponseAsync(
                     firstResponse.Content,
                     firstValidationErrors,
+                    language,
                     cancellationToken);
+            ApplyStyleDefaults(correctedResult);
 
             var correctedValidationErrors =
                 GeneratedInitiativePreviewValidator.Validate(
                     correctedResult);
+            AddLanguageErrors(correctedResult, language, correctedValidationErrors);
 
             if (correctedValidationErrors.Count > 0)
             {
@@ -102,6 +111,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
             TryCorrectResponseAsync(
                 string originalContent,
                 List<string> validationErrors,
+                GenerationLanguage language,
                 CancellationToken cancellationToken)
         {
             var correctionPrompt =
@@ -120,6 +130,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
             Correct the JSON while preserving the original intent.
 
             Important rules:
+            - Write every initiative and task name and description in {{GenerationLanguageDetector.Name(language)}} only.
+            - Never switch to Chinese or any other language.
             - Return JSON only.
             - Do not include markdown.
             - Do not include explanations.
@@ -137,6 +149,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
                             """
                         You correct invalid structured JSON.
@@ -184,6 +197,32 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 throw new InvalidOperationException(
                     "استجابة الذكاء الاصطناعي ليست بصيغة JSON صحيحة.",
                     ex);
+            }
+        }
+
+        private static void AddLanguageErrors(
+            GeneratedInitiativePreview initiative,
+            GenerationLanguage language,
+            List<string> errors)
+        {
+            if (!GenerationLanguageDetector.Matches(initiative.Name, language) ||
+                !GenerationLanguageDetector.Matches(initiative.Description, language) ||
+                initiative.Tasks.Any(task =>
+                    !GenerationLanguageDetector.Matches(task.Name, language) ||
+                    !GenerationLanguageDetector.Matches(task.Description, language)))
+                errors.Add("لغة المحتوى المولد لا تطابق لغة طلب المستخدم.");
+        }
+
+        private static void ApplyStyleDefaults(GeneratedInitiativePreview initiative)
+        {
+            var style = WorkItemStyleDefaults.ForInitiative(initiative.Name, initiative.Description, initiative.Color, initiative.Icon);
+            initiative.Color = style.Color;
+            initiative.Icon = style.Icon;
+            foreach (var task in initiative.Tasks)
+            {
+                var taskStyle = WorkItemStyleDefaults.ForTask(task.Name, task.Description, task.Color, task.Icon);
+                task.Color = taskStyle.Color;
+                task.Icon = taskStyle.Icon;
             }
         }
 

@@ -35,22 +35,11 @@ namespace TaskFlow.Application.Features.Statuses.Handlers
                     })
                     .ToListAsync(cancellationToken);
 
-                if (statuses == null || statuses.Count == 0)
-                {
-                    throw new InvalidOperationException("لا توجد حالات مسجلة حالياً");
-                }
-
-                return statuses.Select(s => new StatusDto
-                {
-                    Id = s.Id,
-                    Name = s.Name ?? string.Empty,
-                    Description = s.Description,
-                    Color = s.Color
-                }).ToList();
+                return statuses;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                throw new InvalidOperationException("حدث خطأ أثناء جلب قائمة الحالات. يرجى المحاولة مرة أخرى لاحقاً.");
+                throw new InvalidOperationException("An error occurred while loading statuses. Please try again later.", exception);
             }
         }
     }

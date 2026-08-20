@@ -22,5 +22,14 @@ namespace TaskFlow.API.Services
                 return Guid.TryParse(userId, out var id) ? id : null;
             }
         }
+
+        public Guid? ClientId
+        {
+            get
+            {
+                var value = _httpContextAccessor.HttpContext?.User.FindFirst("client_id")?.Value;
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
     }
 }

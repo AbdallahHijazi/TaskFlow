@@ -10,6 +10,7 @@ using TaskFlow.Application.Features.AI.TaskGeneration.Commands;
 using TaskFlow.Application.Features.AI.TaskGeneration.Validators;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
 {
@@ -100,6 +101,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
 
             foreach (var generatedTask in request.Tasks)
             {
+                var taskStyle = WorkItemStyleDefaults.ForTask(generatedTask.Name, generatedTask.Description, generatedTask.Color, generatedTask.Icon);
                 var task = new TaskItem
                 {
                     Name = generatedTask.Name.Trim(),
@@ -115,8 +117,8 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                     StatusId = request.StatusId,
                     AssignedToId = request.AssignedToId,
 
-                    Color = generatedTask.Color?.Trim(),
-                    Icon = generatedTask.Icon?.Trim(),
+                    Color = taskStyle.Color,
+                    Icon = taskStyle.Icon,
 
                     IsAISuggested = true,
                     IsActive = true

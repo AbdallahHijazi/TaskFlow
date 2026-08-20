@@ -27,7 +27,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [AllowAnonymous]
     public async Task<IActionResult> Create([FromForm] CreateUserDto dto)
     {
         if (dto == null)
