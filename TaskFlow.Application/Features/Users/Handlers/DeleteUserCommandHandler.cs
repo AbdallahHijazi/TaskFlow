@@ -16,19 +16,22 @@ namespace TaskFlow.Application.Features.Users.Handlers
     {
         private readonly IRepository<User> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService currentUser;
 
-        public DeleteUserCommandHandler(IRepository<User> repository, IUnitOfWork unitOfWork)
+        public DeleteUserCommandHandler(IRepository<User> repository, IUnitOfWork unitOfWork, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            this.currentUser = currentUser;
         }
 
         public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
             try
             {
+                var clientId = currentUser.ClientId ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a client. Please sign in again.");
                 var user = await _repository.GetAll()
-                    .Where(u => u.Id == request.Id)
+                    .Where(u => u.Id == request.Id && u.ClientId == clientId)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 if (user == null)
@@ -38,6 +41,10 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return true;
+            }
+            catch (TaskFlow.Domain.Exceptions.UnauthorizedException)
+            {
+                throw;
             }
             catch (NotFoundException)
             {

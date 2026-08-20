@@ -15,15 +15,18 @@ namespace TaskFlow.Application.Features.Lookups.Handlers
     public class GetUserLookupsQueryHandler : IRequestHandler<GetUserLookupsQuery, List<LookupItemDto>>
     {
         private readonly IRepository<User> repository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService currentUser;
 
-        public GetUserLookupsQueryHandler(IRepository<User> repository)
+        public GetUserLookupsQueryHandler(IRepository<User> repository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             this.repository = repository;
+            this.currentUser = currentUser;
         }
 
         public async Task<List<LookupItemDto>> Handle(GetUserLookupsQuery request, CancellationToken cancellationToken)
         {
-            var users = await repository.GetAll()
+            var clientId = currentUser.ClientId ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a client. Please sign in again.");
+            var users = await repository.GetAll().Where(u => u.ClientId == clientId)
                 .Select(u => new LookupItemDto
                 {
                     Id = u.Id,

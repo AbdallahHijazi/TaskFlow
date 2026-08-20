@@ -46,9 +46,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
             var user = await _usersRepository
                 .GetAll()
                 .Include(u => u.Role)
+                .Include(u => u.Client)
                 .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalizedEmail, cancellationToken);
 
-            if (user == null || string.IsNullOrWhiteSpace(user.Password))
+            if (user == null || user.Client == null || !user.Client.IsActive || string.IsNullOrWhiteSpace(user.Password))
                 throw new UnauthorizedException("البريد الإلكتروني أو كلمة المرور غير صحيحة");
 
             var passwordValid = _passwordHasher.VerifyPassword(user.Password, request.Dto.Password);

@@ -285,6 +285,9 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 
+# Runtime uploads are environment data and must not be committed.
+TaskFlow.API/wwwroot/uploads/
+
 # Visual Studio 6 build log
 *.plg
 

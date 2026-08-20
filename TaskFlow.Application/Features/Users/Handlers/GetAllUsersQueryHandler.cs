@@ -15,17 +15,21 @@ namespace TaskFlow.Application.Features.Users.Handlers
     public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<UserDto>>
     {
         private readonly IRepository<User> _repository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService currentUser;
 
-        public GetAllUsersQueryHandler(IRepository<User> repository)
+        public GetAllUsersQueryHandler(IRepository<User> repository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
+            this.currentUser = currentUser;
         }
 
         public async Task<List<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
             try
             {
+                var clientId = currentUser.ClientId ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a client. Please sign in again.");
                 var users = await _repository.GetAll()
+                    .Where(u => u.ClientId == clientId)
                     .AsNoTracking()
                     .Select(u => new UserDto
                     {
@@ -36,7 +40,9 @@ namespace TaskFlow.Application.Features.Users.Handlers
                         RoleId = u.RoleId ?? Guid.Empty,
                         CreatedAt = u.CreatedAt,
                         CreatedById = u.CreatedBy ?? Guid.Empty,
-                        ImageId = u.ImageId ?? Guid.Empty,
+                        ImageId = u.ImageId,
+                        ClientId = u.ClientId,
+                        ClientName = u.Client != null ? u.Client.Name : string.Empty,
                         RoleName = u.Role != null ? u.Role.RoleName : string.Empty,
                         UpdatedAt = u.UpdatedAt,
                         UpdatedById = u.UpdatedBy ?? Guid.Empty,
@@ -44,6 +50,10 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     .ToListAsync(cancellationToken);
 
                 return users;
+            }
+            catch (TaskFlow.Domain.Exceptions.UnauthorizedException)
+            {
+                throw;
             }
             catch (Exception)
             {

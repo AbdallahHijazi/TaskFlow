@@ -39,6 +39,8 @@ namespace TaskFlow.Infrastructure.AI
                     nameof(request));
             }
 
+            var language = request.OutputLanguage ?? GenerationLanguageDetector.Detect(request.Prompt);
+            var languageName = GenerationLanguageDetector.Name(language);
             var messages = new List<OllamaMessage>();
 
             if (!string.IsNullOrWhiteSpace(request.SystemPrompt))
@@ -46,7 +48,7 @@ namespace TaskFlow.Infrastructure.AI
                 messages.Add(
                     new OllamaMessage(
                         "system",
-                        request.SystemPrompt));
+                        $"{request.SystemPrompt}\n\nLANGUAGE POLICY: All human-readable generated content must be in {languageName} only. Do not use Chinese or any third language. JSON property names, identifiers, enum values, code, and proper names may remain unchanged."));
             }
 
             messages.Add(
@@ -54,10 +56,26 @@ namespace TaskFlow.Infrastructure.AI
                     "user",
                     request.Prompt));
 
-            var ollamaRequest = new OllamaChatRequest(
-                model: _options.Model,
-                stream: false,
-                messages: messages);
+            if (string.IsNullOrWhiteSpace(request.SystemPrompt))
+                messages.Insert(0, new OllamaMessage("system", $"Respond in {languageName} only. Never use Chinese or any third language."));
+
+            var content = await SendAsync(messages, cancellationToken);
+            if (!GenerationLanguageDetector.Matches(content, language))
+            {
+                messages.Add(new OllamaMessage("assistant", content));
+                messages.Add(new OllamaMessage("user", $"Rewrite the response in {languageName} only. Preserve the exact requested structure and data. Return no commentary."));
+                content = await SendAsync(messages, cancellationToken);
+            }
+
+            if (!GenerationLanguageDetector.Matches(content, language))
+                throw new InvalidOperationException($"The model did not return a valid {languageName} response.");
+
+            return new LLMResponse { Content = content };
+        }
+
+        private async Task<string> SendAsync(List<OllamaMessage> messages, CancellationToken cancellationToken)
+        {
+            var ollamaRequest = new OllamaChatRequest(_options.Model, false, messages);
 
             using var response = await _httpClient.PostAsJsonAsync(
                 "api/chat",
@@ -85,10 +103,7 @@ namespace TaskFlow.Infrastructure.AI
                     "Ollama returned an empty response.");
             }
 
-            return new LLMResponse
-            {
-                Content = result.message.content
-            };
+            return result.message.content;
         }
     }
 }

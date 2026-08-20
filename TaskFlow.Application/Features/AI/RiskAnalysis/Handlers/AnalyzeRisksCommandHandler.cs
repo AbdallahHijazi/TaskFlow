@@ -71,6 +71,11 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
                     "لا توجد مهام ضمن المبادرة لتحليل المخاطر.");
             }
 
+            var language = GenerationLanguageDetector.Detect(
+                string.Join(" ", new[] { initiative.Name, initiative.Description }
+                    .Concat(tasks.SelectMany(task => new[] { task.Name, task.Description }))));
+            var languageName = GenerationLanguageDetector.Name(language);
+
             var prompt =
                 RiskAnalysisPromptBuilder.Build(
                     initiative,
@@ -80,14 +85,15 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
-                            """
+                            $$"""
                     You analyze project risks in initiatives.
 
                     Use only the provided initiative and tasks.
                     Return valid JSON only.
                     Do not return markdown or explanations outside JSON.
-                    Write summary and recommendations in clear Arabic.
+                    Write all human-readable analysis in clear {{languageName}} only.
                     """,
 
                         Prompt = prompt
@@ -151,6 +157,7 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
                     validationErrors,
                     initiative,
                     tasks,
+                    language,
                     cancellationToken);
 
             correctedResponse.InitiativeId = initiative.Id;
@@ -179,6 +186,7 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
         List<string> validationErrors,
         Initiative initiative,
         IReadOnlyCollection<TaskItem> tasks,
+        GenerationLanguage language,
         CancellationToken cancellationToken)
         {
             var validTasksText =
@@ -226,7 +234,7 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
         - Do not repeat the same risk.
         - Severity must be exactly one of:
           Low, Medium, High, Critical.
-        - Write summary, title, reason, impact, and recommendation in Arabic.
+        - Write summary, title, description, impact, and recommendation in {{GenerationLanguageDetector.Name(language)}} only.
         - Do not return null or undefined values.
         - If no meaningful risks exist, return an empty risks array.
 
@@ -250,6 +258,7 @@ namespace TaskFlow.Application.Features.AI.RiskAnalysis.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
                             """
                     You correct invalid project risk-analysis JSON.

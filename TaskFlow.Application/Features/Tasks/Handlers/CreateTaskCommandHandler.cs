@@ -8,6 +8,7 @@ using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Task;
 using TaskFlow.Application.Features.Tasks.Commands;
 using TaskFlow.Domain.Entities;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.Tasks.Handlers
 {
@@ -47,6 +48,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     throw new InvalidOperationException(
                         "المبادرة المحددة غير موجودة.");
                 }
+                var style = WorkItemStyleDefaults.ForTask(request.Dto.Name, request.Dto.Description, request.Dto.Color, request.Dto.Icon);
                 var task = new TaskItem
                 {
                     Name = request.Dto.Name.Trim(),
@@ -57,8 +59,8 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     StatusId = request.Dto.StatusId,
                     InitiativeId = request.Dto.InitiativeId,
                     AssignedToId = request.Dto.AssignedToId,
-                    Color = request.Dto.Color,
-                    Icon = request.Dto.Icon,
+                    Color = style.Color,
+                    Icon = style.Icon,
                     ImageId = imageId,
                 };
 

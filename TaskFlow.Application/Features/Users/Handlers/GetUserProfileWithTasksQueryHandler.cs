@@ -11,19 +11,22 @@ namespace TaskFlow.Application.Features.Users.Handlers;
 public class GetUserProfileWithTasksQueryHandler : IRequestHandler<GetUserProfileWithTasksQuery, UserProfileWithTasksDto>
 {
     private readonly IRepository<User> _usersRepository;
+    private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
-    public GetUserProfileWithTasksQueryHandler(IRepository<User> usersRepository)
+    public GetUserProfileWithTasksQueryHandler(IRepository<User> usersRepository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
     {
         _usersRepository = usersRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<UserProfileWithTasksDto> Handle(GetUserProfileWithTasksQuery request, CancellationToken cancellationToken)
     {
+        var clientId = _currentUser.ClientId ?? throw new UnauthorizedException("Your session does not contain a client. Please sign in again.");
         var user = await _usersRepository.GetAll()
             .AsNoTracking()
             .Include(u => u.Role)
             .Include(u => u.AssignedTasks)
-            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == request.UserId && u.ClientId == clientId, cancellationToken);
 
         if (user == null)
             throw new NotFoundException("المستخدم", request.UserId);

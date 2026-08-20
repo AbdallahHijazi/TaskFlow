@@ -14,6 +14,7 @@ using TaskFlow.Application.Features.AI.TaskGeneration.Services;
 using TaskFlow.Application.Features.AI.TaskGeneration.Validators;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
+using TaskFlow.Application.Common.Services;
 
 namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
 {
@@ -50,6 +51,8 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
             ArgumentNullException.ThrowIfNull(command.Request);
 
             var request = command.Request;
+            var language = GenerationLanguageDetector.Detect(request.Prompt);
+            var languageName = GenerationLanguageDetector.Name(language);
 
             var initiative =
                 _initiativeRepository.Get(request.InitiativeId);
@@ -96,15 +99,16 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
-                            """
+                            $$"""
                         You generate structured tasks
                         for an existing initiative.
 
                         Return valid JSON only.
                         Do not return markdown.
                         Do not return explanations.
-                        Use clear and meaningful Arabic language.
+                        Use {{languageName}} only. Never switch languages.
                         """,
 
                         Prompt = prompt
@@ -113,6 +117,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
 
             var preview =
                 DeserializeResponse(llmResponse.Content);
+            ApplyStyleDefaults(preview);
 
             preview.InitiativeId = initiative.Id;
             preview.InitiativeName =
@@ -124,6 +129,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                    initiative.StartDate.Value,
                    initiative.EndDate,
                    existingTaskNames);
+            AddLanguageErrors(preview, language, validationErrors);
 
             if (validationErrors.Count == 0)
             {
@@ -136,7 +142,9 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                     validationErrors,
                     initiative,
                     existingTaskNames,
+                    language,
                     cancellationToken);
+            ApplyStyleDefaults(correctedPreview);
 
             correctedPreview.InitiativeId = initiative.Id;
             correctedPreview.InitiativeName =
@@ -148,6 +156,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                     initiative.StartDate.Value,
                     initiative.EndDate,
                     existingTaskNames);
+            AddLanguageErrors(correctedPreview, language, correctedValidationErrors);
 
             if (correctedValidationErrors.Count > 0)
             {
@@ -168,6 +177,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                 List<string> validationErrors,
                 Initiative initiative,
                 IReadOnlyCollection<string> existingTaskNames,
+                GenerationLanguage language,
                 CancellationToken cancellationToken)
                 {
                     var existingTasksText =
@@ -203,11 +213,13 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                 Correct the JSON while preserving the user's intent.
 
                 Important rules:
+                - Write every task name and description in {{GenerationLanguageDetector.Name(language)}} only.
+                - Never switch to Chinese or any other language.
                 - Return JSON only.
                 - Do not include markdown.
                 - Do not include explanations.
                 - Generate tasks only, not an initiative.
-                - Use clear and meaningful Arabic.
+                - Use clear and meaningful {{GenerationLanguageDetector.Name(language)}}.
                 - Do not duplicate any existing task.
                 - Do not duplicate names among the generated tasks.
                 - Every task must fall completely within the initiative date range.
@@ -234,6 +246,7 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                 await _llmProvider.ExecuteAsync(
                     new LLMRequest
                     {
+                        OutputLanguage = language,
                         SystemPrompt =
                             """
                     You correct invalid structured task JSON.
@@ -280,6 +293,27 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                 throw new InvalidOperationException(
                     "استجابة الذكاء الاصطناعي ليست بصيغة JSON صحيحة.",
                     ex);
+            }
+        }
+
+        private static void AddLanguageErrors(
+            GeneratedTasksPreview preview,
+            GenerationLanguage language,
+            List<string> errors)
+        {
+            if (preview.Tasks.Any(task =>
+                    !GenerationLanguageDetector.Matches(task.Name, language) ||
+                    !GenerationLanguageDetector.Matches(task.Description, language)))
+                errors.Add("لغة المهام المولدة لا تطابق لغة طلب المستخدم.");
+        }
+
+        private static void ApplyStyleDefaults(GeneratedTasksPreview preview)
+        {
+            foreach (var task in preview.Tasks)
+            {
+                var style = WorkItemStyleDefaults.ForTask(task.Name, task.Description, task.Color, task.Icon);
+                task.Color = style.Color;
+                task.Icon = style.Icon;
             }
         }
 

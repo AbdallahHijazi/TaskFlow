@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ namespace TaskFlow.Tests.Integration.Users;
 
 public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFactory>
 {
+    private static readonly Guid ClientId = Guid.NewGuid();
     private readonly TaskFlowApiFactory _factory;
 
     public GetUserTasksEndpointIntegrationTests(TaskFlowApiFactory factory)
@@ -28,10 +30,12 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
         await ResetDbAsync(db);
 
         var userId = Guid.NewGuid();
-        db.Users.Add(new User { Id = userId, Name = "Owner", Email = "owner@test.com", Password = "x" });
+        db.Clients.Add(new Client { Id = ClientId, Name = "Test Client" });
+        db.Users.Add(new User { Id = userId, ClientId = ClientId, Name = "Owner", Email = "owner@test.com", Password = "x" });
         db.Tasks.Add(new TaskItem
         {
             Id = Guid.NewGuid(),
+            ClientId = ClientId,
             Name = "Task A",
             AssignedToId = userId,
             CreatedAt = DateTime.UtcNow
@@ -54,7 +58,8 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
         await ResetDbAsync(db);
 
         var userId = Guid.NewGuid();
-        db.Users.Add(new User { Id = userId, Name = "Owner", Email = "owner@test.com", Password = "x" });
+        db.Clients.Add(new Client { Id = ClientId, Name = "Test Client" });
+        db.Users.Add(new User { Id = userId, ClientId = ClientId, Name = "Owner", Email = "owner@test.com", Password = "x" });
         await db.SaveChangesAsync();
 
         var client = _factory.CreateClient();
@@ -64,7 +69,7 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
         var body = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("VALIDATION_ERROR", body);
+        Assert.Contains("\"errorCode\":\"400\"", body);
         Assert.Contains("validationErrors", body);
     }
 
@@ -93,13 +98,14 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
         var body = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Contains("NOT_FOUND", body);
+        Assert.Contains("\"errorCode\":\"404\"", body);
     }
 
     private static async Task ResetDbAsync(AppDbContext db)
     {
-        db.Tasks.RemoveRange(db.Tasks);
+        db.Tasks.RemoveRange(db.Tasks.IgnoreQueryFilters());
         db.Users.RemoveRange(db.Users);
+        db.Clients.RemoveRange(db.Clients);
         await db.SaveChangesAsync();
     }
 
@@ -109,6 +115,7 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Role, role),
+            new Claim("client_id", ClientId.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString())
         };
 

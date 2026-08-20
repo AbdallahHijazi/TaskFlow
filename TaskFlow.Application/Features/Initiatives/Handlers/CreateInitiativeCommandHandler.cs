@@ -34,6 +34,7 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             {
                 var imageId = await imageService.SaveImageAsync(request.Dto.Image, cancellationToken);
 
+                var style = WorkItemStyleDefaults.ForInitiative(request.Dto.Name, request.Dto.Description, request.Dto.Color, request.Dto.Icon);
                 var initiative = new Initiative
                 {
                     Name = request.Dto.Name.Trim(),
@@ -43,8 +44,8 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Progress = request.Dto.Progress,
                     IsAISuggested = request.Dto.IsAISuggested,
                     AssignedToId = request.Dto.AssignedTo,
-                    Color = request.Dto.Color,
-                    Icon = request.Dto.Icon,
+                    Color = style.Color,
+                    Icon = style.Icon,
                     StatusId = request.Dto.StatusId,
                     ImageId = imageId,
                 };

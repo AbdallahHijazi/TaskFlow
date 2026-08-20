@@ -17,17 +17,20 @@ namespace TaskFlow.Application.Features.Users.Handlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserPasswordHasher _passwordHasher;
         private readonly IImageService imageService;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService currentUser;
 
         public CreateUserCommandHandler(
             IRepository<User> repository,
             IUnitOfWork unitOfWork,
             IUserPasswordHasher passwordHasher,
-            IImageService imageService)
+            IImageService imageService,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             this.imageService = imageService;
+            this.currentUser = currentUser;
         }
 
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -50,6 +53,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
 
                 if (request.Dto.RoleId == Guid.Empty)
                     throw new InvalidOperationException("يجب اختيار دور للمستخدم");
+                var clientId = currentUser.ClientId ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a client. Please sign in again.");
                 var imageId = await imageService.SaveImageAsync(request.Dto.Image,cancellationToken);
                 var user = new User
                 {
@@ -59,6 +63,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     PhoneNumber = request.Dto.PhoneNumber?.Trim(),
                     RoleId = request.Dto.RoleId,
                     ImageId = imageId
+                    ,ClientId = clientId
                 };
 
                 _repository.Add(user);
@@ -71,7 +76,8 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
                     RoleId = user.RoleId ?? Guid.Empty,
-                    ImageId = user.ImageId ?? Guid.Empty,
+                    ImageId = user.ImageId,
+                    ClientId = user.ClientId,
                     RoleName = user.Role?.RoleName ?? string.Empty,
                     CreatedAt = user.CreatedAt,
                     CreatedById = user.CreatedBy,
@@ -79,6 +85,10 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     UpdatedById=user.UpdatedBy
 
                 };
+            }
+            catch (TaskFlow.Domain.Exceptions.UnauthorizedException)
+            {
+                throw;
             }
             catch (InvalidOperationException)
             {

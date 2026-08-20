@@ -7,9 +7,11 @@ using TaskFlow.Domain.Common;
 
 namespace TaskFlow.Domain.Entities
 {
-    public class Image:BaseEntity
+    public class Image:BaseEntity, ITenantEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid ClientId { get; set; }
+        public Client? Client { get; set; }
         public string? FileName { get; set; }
         public string? FilePath { get; set; }
         public string? MediaType { get; set; }

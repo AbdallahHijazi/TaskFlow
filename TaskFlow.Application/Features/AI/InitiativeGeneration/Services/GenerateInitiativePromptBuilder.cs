@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskFlow.Application.DTOs.AI.InitiativeGeneration;
+using TaskFlow.Application.AI.Models;
 
 namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Services
 {
@@ -13,6 +14,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Services
             GenerateInitiativeRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
+            var language = GenerationLanguageDetector.Name(GenerationLanguageDetector.Detect(request.Prompt));
 
             return $$"""
         You are an assistant specialized in project and initiative planning.
@@ -23,6 +25,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Services
         "{{request.Prompt}}"
 
         Important rules:
+        - Write every initiative and task name and description in {{language}} only.
+        - Never switch to Chinese or any other language.
         - Return JSON only.
         - Do not include markdown.
         - Do not include explanations.
@@ -31,7 +35,7 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Services
         - Generate between 5 and 10 tasks.
         - Every task must belong to the generated initiative.
         - Task names must be unique.
-        - Use clear Arabic names and descriptions.
+        - Use clear {{language}} names and descriptions.
         - Generate tasks that are specific to the business domain of the initiative.
         - Do not generate only generic software lifecycle stages such as analysis, design, development, and testing.
         - The tasks must represent actual functional work inside the requested system.

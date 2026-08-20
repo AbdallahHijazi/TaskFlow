@@ -22,10 +22,54 @@ namespace TaskFlow.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("TaskFlow.Domain.Entities.Client", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Client", (string)null);
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
@@ -54,6 +98,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("TaskId");
 
                     b.HasIndex("UserId");
@@ -65,6 +111,9 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -90,6 +139,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.ToTable("DependencyType", (string)null);
                 });
 
@@ -97,6 +148,9 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -140,6 +194,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("UploadedById");
 
                     b.ToTable("Image", (string)null);
@@ -152,6 +208,9 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("AssignedToId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Color")
@@ -205,6 +264,8 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToId");
+
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("ImageId");
 
@@ -288,6 +349,9 @@ namespace TaskFlow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Color")
                         .HasColumnType("nvarchar(max)");
 
@@ -314,6 +378,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.ToTable("Status", (string)null);
                 });
 
@@ -321,6 +387,9 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -349,6 +418,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("DependencyTypeId");
 
                     b.HasIndex("PredecessorId");
@@ -365,6 +436,9 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("AssignedToId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Color")
@@ -425,6 +499,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasIndex("AssignedToId");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("ImageId");
 
                     b.HasIndex("InitiativeId");
@@ -440,6 +516,9 @@ namespace TaskFlow.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -477,6 +556,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("ImageId");
 
                     b.HasIndex("RoleId");
@@ -486,6 +567,12 @@ namespace TaskFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskFlow.Domain.Entities.Comment", b =>
                 {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Comments")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TaskFlow.Domain.Entities.TaskItem", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
@@ -496,17 +583,38 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("Client");
+
                     b.Navigation("Task");
 
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskFlow.Domain.Entities.DependencyType", b =>
+                {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("DependencyTypes")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.Entities.Image", b =>
                 {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Images")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TaskFlow.Domain.Entities.User", "UploadedBy")
                         .WithMany("UploadedImages")
                         .HasForeignKey("UploadedById")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Client");
 
                     b.Navigation("UploadedBy");
                 });
@@ -517,6 +625,12 @@ namespace TaskFlow.Infrastructure.Migrations
                         .WithMany("AssignedInitiatives")
                         .HasForeignKey("AssignedToId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Initiatives")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("TaskFlow.Domain.Entities.Image", "Image")
                         .WithMany("Initiatives")
@@ -529,6 +643,8 @@ namespace TaskFlow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssignedTo");
+
+                    b.Navigation("Client");
 
                     b.Navigation("Image");
 
@@ -546,8 +662,25 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskFlow.Domain.Entities.Status", b =>
+                {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Statuses")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.Entities.TaskDependency", b =>
                 {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("TaskDependencies")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TaskFlow.Domain.Entities.DependencyType", "DependencyType")
                         .WithMany("TaskDependencies")
                         .HasForeignKey("DependencyTypeId")
@@ -563,6 +696,8 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasForeignKey("SuccessorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("Client");
+
                     b.Navigation("DependencyType");
 
                     b.Navigation("Predecessor");
@@ -576,6 +711,12 @@ namespace TaskFlow.Infrastructure.Migrations
                         .WithMany("AssignedTasks")
                         .HasForeignKey("AssignedToId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("TaskFlow.Domain.Entities.Image", "Image")
                         .WithMany("Tasks")
@@ -600,6 +741,8 @@ namespace TaskFlow.Infrastructure.Migrations
 
                     b.Navigation("AssignedTo");
 
+                    b.Navigation("Client");
+
                     b.Navigation("Image");
 
                     b.Navigation("Initiative");
@@ -611,6 +754,12 @@ namespace TaskFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskFlow.Domain.Entities.User", b =>
                 {
+                    b.HasOne("TaskFlow.Domain.Entities.Client", "Client")
+                        .WithMany("Users")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TaskFlow.Domain.Entities.Image", "Image")
                         .WithMany("Users")
                         .HasForeignKey("ImageId")
@@ -621,9 +770,30 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("Client");
+
                     b.Navigation("Image");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("TaskFlow.Domain.Entities.Client", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("DependencyTypes");
+
+                    b.Navigation("Images");
+
+                    b.Navigation("Initiatives");
+
+                    b.Navigation("Statuses");
+
+                    b.Navigation("TaskDependencies");
+
+                    b.Navigation("Tasks");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("TaskFlow.Domain.Entities.DependencyType", b =>

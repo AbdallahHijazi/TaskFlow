@@ -31,6 +31,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Name ?? string.Empty),
             new(ClaimTypes.Role, roleName)
+            ,new("client_id", user.ClientId.ToString())
         };
 
         var token = new JwtSecurityToken(

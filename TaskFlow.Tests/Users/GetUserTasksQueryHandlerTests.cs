@@ -6,11 +6,13 @@ using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Exceptions;
 using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Persistence.Repositories;
+using TaskFlow.Domain.Interfaces;
 
 namespace TaskFlow.Tests.Users;
 
 public class GetUserTasksQueryHandlerTests
 {
+    private static readonly Guid ClientId = Guid.NewGuid();
     [Fact]
     public async Task Handle_UserExistsWithTasks_ReturnsTasks()
     {
@@ -78,13 +80,14 @@ public class GetUserTasksQueryHandlerTests
         var statusA = Guid.NewGuid();
         var statusB = Guid.NewGuid();
         var initiativeA = Guid.NewGuid();
-        context.Initiatives.Add(new Initiative { Id = initiativeA, Name = "Platform Revamp" });
+        context.Initiatives.Add(new Initiative { Id = initiativeA, ClientId = ClientId, Name = "Platform Revamp" });
 
-        context.Users.Add(new User { Id = userId, Name = "User A", Email = "a@test.com", Password = "x" });
+        context.Users.Add(new User { Id = userId, ClientId = ClientId, Name = "User A", Email = "a@test.com", Password = "x" });
         context.Tasks.AddRange(
             new TaskItem
             {
                 Id = Guid.NewGuid(),
+                ClientId = ClientId,
                 Name = "Design API",
                 Description = "Core work",
                 AssignedToId = userId,
@@ -99,6 +102,7 @@ public class GetUserTasksQueryHandlerTests
             new TaskItem
             {
                 Id = Guid.NewGuid(),
+                ClientId = ClientId,
                 Name = "Write docs",
                 Description = "Documentation",
                 AssignedToId = userId,
@@ -135,11 +139,12 @@ public class GetUserTasksQueryHandlerTests
     {
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
-        context.Users.Add(new User { Id = userId, Name = "User A", Email = "a@test.com", Password = "x" });
+        context.Users.Add(new User { Id = userId, ClientId = ClientId, Name = "User A", Email = "a@test.com", Password = "x" });
         context.Tasks.AddRange(
             new TaskItem
             {
                 Id = Guid.NewGuid(),
+                ClientId = ClientId,
                 Name = "Delayed Task",
                 AssignedToId = userId,
                 EndDate = DateTime.UtcNow.AddDays(-2),
@@ -148,6 +153,7 @@ public class GetUserTasksQueryHandlerTests
             new TaskItem
             {
                 Id = Guid.NewGuid(),
+                ClientId = ClientId,
                 Name = "Upcoming Task",
                 AssignedToId = userId,
                 EndDate = DateTime.UtcNow.AddDays(2),
@@ -173,7 +179,8 @@ public class GetUserTasksQueryHandlerTests
     {
         return new GetUserTasksQueryHandler(
             new GenericRepository<User>(context),
-            new GenericRepository<TaskItem>(context));
+            new GenericRepository<TaskItem>(context),
+            new TestCurrentUser(ClientId));
     }
 
     private static Guid SeedUserWithTasks(AppDbContext context, int taskCount)
@@ -182,6 +189,7 @@ public class GetUserTasksQueryHandlerTests
         context.Users.Add(new User
         {
             Id = userId,
+            ClientId = ClientId,
             Name = "User A",
             Email = "user@test.com",
             Password = "x"
@@ -192,6 +200,7 @@ public class GetUserTasksQueryHandlerTests
             context.Tasks.Add(new TaskItem
             {
                 Id = Guid.NewGuid(),
+                ClientId = ClientId,
                 Name = $"Task {i + 1}",
                 AssignedToId = userId,
                 CreatedAt = DateTime.UtcNow.AddDays(-i),
@@ -209,6 +218,12 @@ public class GetUserTasksQueryHandlerTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        return new AppDbContext(options);
+        return new AppDbContext(options, new TestCurrentUser(ClientId));
+    }
+
+    private sealed record TestCurrentUser(Guid TenantId) : ICurrentUserService
+    {
+        public Guid? UserId => null;
+        public Guid? ClientId => TenantId;
     }
 }
