@@ -14,6 +14,8 @@ using TaskFlow.Infrastructure.Persistence;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<TaskFlow.Application.Common.Interfaces.INotificationRealtimePublisher, SignalRNotificationPublisher>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiPresentation(builder.Configuration);
 
@@ -77,6 +79,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TaskFlow.API.Hubs.NotificationsHub>("/hubs/notifications");
 app.MapGet("/", () => "TaskFlow API is running");
 app.Run();
 

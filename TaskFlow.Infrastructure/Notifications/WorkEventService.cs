@@ -16,10 +16,11 @@ public class WorkEventService : IWorkEventService
     private readonly ICurrentUserService _currentUser;
     private readonly SmtpOptions _options;
     private readonly ILogger<WorkEventService> _logger;
+    private readonly INotificationRealtimePublisher _realtime;
 
     public WorkEventService(AppDbContext db, ICurrentUserService currentUser, IOptions<SmtpOptions> options,
-        ILogger<WorkEventService> logger)
-    { _db = db; _currentUser = currentUser; _options = options.Value; _logger = logger; }
+        ILogger<WorkEventService> logger, INotificationRealtimePublisher realtime)
+    { _db = db; _currentUser = currentUser; _options = options.Value; _logger = logger; _realtime = realtime; }
 
     public async Task RecordAsync(Guid? recipientUserId, Guid? taskId, string type, string title, string message,
         string? oldValue = null, string? newValue = null, bool sendEmail = true, CancellationToken cancellationToken = default)
@@ -27,13 +28,27 @@ public class WorkEventService : IWorkEventService
         _db.ActivityLogs.Add(new ActivityLog { TaskId = taskId, ActorUserId = _currentUser.UserId,
             Type = type, Description = message, OldValue = oldValue, NewValue = newValue });
         User? recipient = null;
+        Notification? notification = null;
         if (recipientUserId.HasValue && recipientUserId != _currentUser.UserId)
         {
             recipient = await _db.Users.FirstOrDefaultAsync(user => user.Id == recipientUserId.Value && user.ClientId == _currentUser.ClientId, cancellationToken);
-            if (recipient != null) _db.Notifications.Add(new Notification { RecipientUserId = recipient.Id, TaskId = taskId,
-                Type = type, Title = title, Message = message });
+            if (recipient != null) { notification = new Notification { RecipientUserId = recipient.Id, TaskId = taskId,
+                Type = type, Title = title, Message = message }; _db.Notifications.Add(notification); }
         }
         await _db.SaveChangesAsync(cancellationToken);
+        if (recipient != null && notification != null)
+        {
+            try
+            {
+                await _realtime.PublishAsync(recipient.Id,
+                    new RealtimeNotification(notification.Id, notification.TaskId, notification.Type,
+                        notification.Title, notification.Message, notification.IsRead, notification.CreatedAt), cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Realtime notification could not be delivered to user {UserId}", recipient.Id);
+            }
+        }
         if (!sendEmail || !_options.Enabled || recipient?.Email == null) return;
         try
         {

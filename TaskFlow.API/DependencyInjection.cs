@@ -61,6 +61,16 @@ public static class DependencyInjection
                     IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"];
+                        if (!string.IsNullOrWhiteSpace(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/notifications"))
+                            context.Token = token;
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         return services;
