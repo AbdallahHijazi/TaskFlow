@@ -23,14 +23,6 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Validators
                     .NotEmpty()
                     .WithMessage("معرّف المبادرة مطلوب.");
 
-                RuleFor(x => x.Request.StatusId)
-                    .NotEmpty()
-                    .WithMessage("معرّف حالة المهمة مطلوب.");
-
-                RuleFor(x => x.Request.AssignedToId)
-                    .NotEmpty()
-                    .WithMessage("معرّف المستخدم المسؤول مطلوب.");
-
                 RuleFor(x => x.Request.Tasks)
                     .NotNull()
                     .WithMessage("قائمة المهام مطلوبة.")

@@ -12,13 +12,16 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
         private const string UnknownStatusName = "Unknown Status";
         private readonly IRepository<TaskItem> _taskRepository;
         private readonly IRepository<Status> _statusRepository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
         public GetTaskBoardQueryHandler(
             IRepository<TaskItem> taskRepository,
-            IRepository<Status> statusRepository)
+            IRepository<Status> statusRepository,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _taskRepository = taskRepository;
             _statusRepository = statusRepository;
+            _currentUser = currentUser;
         }
 
         public async Task<List<TaskBoardColumnDto>> Handle(GetTaskBoardQuery request, CancellationToken cancellationToken)
@@ -34,7 +37,14 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                 })
                 .ToListAsync(cancellationToken);
 
-            var tasks = await _taskRepository.GetAll()
+            var taskQuery = _taskRepository.GetAll();
+            if (!_currentUser.IsAdmin)
+            {
+                var userId = _currentUser.UserId;
+                taskQuery = taskQuery.Where(t => userId.HasValue && t.AssignedToId == userId.Value);
+            }
+
+            var tasks = await taskQuery
                 .OrderBy(t => t.EndDate)
                 .ThenBy(t => t.Name)
                 .Select(t => new TaskDto

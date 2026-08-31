@@ -24,6 +24,7 @@ namespace TaskFlow.Application.DTOs.Task
         public Guid? AssignedToId { get; set; }
         public string? AssignedToName { get; set; }
         public Guid CreatedById { get; set; }
+        public DateTime CreatedAt { get; set; }
         public Guid? ImageId { get; set; }
         public string? ImageUrl { get; set; }
         public string? ThumbnailUrl { get; set; }

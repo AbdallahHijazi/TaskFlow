@@ -17,15 +17,18 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
         private readonly IRepository<Initiative> _repository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService imageService;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService currentUser;
 
         public CreateInitiativeCommandHandler(
             IRepository<Initiative> repository, 
             IUnitOfWork unitOfWork,
-            IImageService imageService)
+            IImageService imageService,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             this.imageService = imageService;
+            this.currentUser = currentUser;
         }
 
         public async Task<InitiativeDto> Handle(CreateInitiativeCommand request, CancellationToken cancellationToken)
@@ -43,7 +46,8 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     EndDate = request.Dto.EndDate,
                     Progress = request.Dto.Progress,
                     IsAISuggested = request.Dto.IsAISuggested,
-                    AssignedToId = request.Dto.AssignedTo,
+                    AssignedToId = currentUser.UserId
+                        ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a user. Please sign in again."),
                     Color = style.Color,
                     Icon = style.Icon,
                     StatusId = request.Dto.StatusId,

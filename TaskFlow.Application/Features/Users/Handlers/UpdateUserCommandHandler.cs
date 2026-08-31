@@ -42,6 +42,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     throw new InvalidOperationException("اسم المستخدم مطلوب");
 
                 user.Name = request.Dto.Name.Trim();
+                user.CanAccessAi = request.Dto.CanAccessAi;
 
                 if (request.Dto.Image != null && request.Dto.Image.Length > 0)
                 {
@@ -63,6 +64,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     PhoneNumber = user.PhoneNumber,
                     RoleId = user.RoleId ?? Guid.Empty,
                     ImageId = user.ImageId,
+                    CanAccessAi = user.CanAccessAi,
                     ClientId = user.ClientId,
                     UpdatedAt=user.UpdatedAt,
                     CreatedAt=user.CreatedAt,

@@ -13,6 +13,11 @@ public static class DependencyInjection
     {
         services.AddCorsPolicy(configuration);
         services.AddJwtAuthentication(configuration);
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("AiAccess", policy => policy.RequireAssertion(context =>
+                context.User.IsInRole("Admin") || context.User.HasClaim("ai_access", "true")));
+        });
         services.AddSwaggerDocumentation();
 
         return services;

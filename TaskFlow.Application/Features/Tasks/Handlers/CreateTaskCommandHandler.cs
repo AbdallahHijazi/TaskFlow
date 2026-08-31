@@ -18,13 +18,15 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService _imageService;
         private readonly IRepository<Initiative> _initiativeRepository;
+        private readonly IWorkEventService _workEvents;
 
-        public CreateTaskCommandHandler(IRepository<TaskItem> repository, IRepository<Initiative> initiativeRepository, IUnitOfWork unitOfWork,IImageService imageService)
+        public CreateTaskCommandHandler(IRepository<TaskItem> repository, IRepository<Initiative> initiativeRepository, IUnitOfWork unitOfWork,IImageService imageService, IWorkEventService workEvents)
         {
             _repository = repository;
             _initiativeRepository = initiativeRepository;
             _unitOfWork = unitOfWork;
             _imageService = imageService;
+            _workEvents = workEvents;
         }
 
         public async Task<TaskDto> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
@@ -66,6 +68,8 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
 
                 _repository.Add(task);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "task_assigned", "New task assigned",
+                    $"You were assigned to task: {task.Name}.", null, task.Name, true, cancellationToken);
 
                 return await _repository.GetAll()
                     .Where(t => t.Id == task.Id)

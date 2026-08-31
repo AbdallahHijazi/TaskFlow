@@ -28,6 +28,9 @@ namespace TaskFlow.Infrastructure.Persistence
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
         public Guid? CurrentUserId { get; set; }
         private Guid? CurrentClientId => currentUser?.ClientId;
@@ -45,6 +48,8 @@ namespace TaskFlow.Infrastructure.Persistence
             modelBuilder.Entity<Comment>().HasQueryFilter(entity => entity.ClientId == CurrentClientId);
             modelBuilder.Entity<TaskDependency>().HasQueryFilter(entity => entity.ClientId == CurrentClientId);
             modelBuilder.Entity<Image>().HasQueryFilter(entity => entity.ClientId == CurrentClientId);
+            modelBuilder.Entity<Notification>().HasQueryFilter(entity => entity.ClientId == CurrentClientId);
+            modelBuilder.Entity<ActivityLog>().HasQueryFilter(entity => entity.ClientId == CurrentClientId);
 
             modelBuilder.Entity<Initiative>().HasOne(entity => entity.Client).WithMany(client => client.Initiatives).HasForeignKey(entity => entity.ClientId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<TaskItem>().HasOne(entity => entity.Client).WithMany(client => client.Tasks).HasForeignKey(entity => entity.ClientId).OnDelete(DeleteBehavior.Restrict);

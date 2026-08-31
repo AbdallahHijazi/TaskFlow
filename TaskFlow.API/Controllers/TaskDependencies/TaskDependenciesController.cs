@@ -19,6 +19,7 @@ public class TaskDependenciesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateTaskDependencyDto dto)
     {
         if (dto == null)
@@ -43,6 +44,7 @@ public class TaskDependenciesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateTaskDependencyDto dto)
     {
         if (dto == null)
@@ -53,6 +55,7 @@ public class TaskDependenciesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _mediator.Send(new DeleteTaskDependencyCommand(id));

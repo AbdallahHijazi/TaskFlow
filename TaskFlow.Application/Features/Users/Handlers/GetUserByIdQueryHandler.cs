@@ -36,6 +36,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     Name = u.Name ?? string.Empty,
                     Email = u.Email ?? string.Empty,
                     PhoneNumber = u.PhoneNumber,
+                    CanAccessAi = u.CanAccessAi,
                     RoleId = u.RoleId ?? Guid.Empty,
                     CreatedAt=u.CreatedAt,
                     CreatedById = u.CreatedBy ?? Guid.Empty,

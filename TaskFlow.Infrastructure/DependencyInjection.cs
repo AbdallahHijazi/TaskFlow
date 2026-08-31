@@ -16,6 +16,7 @@ using TaskFlow.Infrastructure.Persistence;
 using TaskFlow.Infrastructure.Persistence.Repositories;
 using TaskFlow.Infrastructure.Security;
 using TaskFlow.Infrastructure.Storage;
+using TaskFlow.Infrastructure.Notifications;
 
 
 namespace TaskFlow.Infrastructure
@@ -36,6 +37,8 @@ namespace TaskFlow.Infrastructure
             services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
             services.AddSingleton<IAuthSettingsProvider, AuthSettingsProvider>();
             services.AddScoped<IImageService, ImageService>();
+            services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+            services.AddScoped<IWorkEventService, WorkEventService>();
 
 
             services.Configure<OllamaOptions>

@@ -15,15 +15,24 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
     public class GetAllInitiativesQueryHandler : IRequestHandler<GetAllInitiativesQuery, List<InitiativeDto>>
     {
         private readonly IRepository<Initiative> _repository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
-        public GetAllInitiativesQueryHandler(IRepository<Initiative> repository)
+        public GetAllInitiativesQueryHandler(IRepository<Initiative> repository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
+            _currentUser = currentUser;
         }
 
         public async Task<List<InitiativeDto>> Handle(GetAllInitiativesQuery request, CancellationToken cancellationToken)
         {
-            var initiatives = await _repository.GetAll()
+            var query = _repository.GetAll();
+            if (!_currentUser.IsAdmin)
+            {
+                var userId = _currentUser.UserId;
+                query = query.Where(i => userId.HasValue && (i.AssignedToId == userId.Value || i.Tasks.Any(t => t.AssignedToId == userId.Value)));
+            }
+
+            var initiatives = await query
                 .AsNoTracking()
                 .Select(i => new InitiativeDto
                 {

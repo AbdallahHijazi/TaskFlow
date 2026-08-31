@@ -15,9 +15,9 @@ using TaskFlow.Application.Features.AI.RiskAnalysis.Commands;
 using TaskFlow.Application.Features.AI.TaskGeneration.Commands;
 
 namespace TaskFlow.API.Controllers.AI;
-[AllowAnonymous]
 [ApiController]
 [Route("api/ai")]
+[Authorize(Policy = "AiAccess")]
 public class AiController : ControllerBase
 {
     private readonly IAiChatService _aiChatService;

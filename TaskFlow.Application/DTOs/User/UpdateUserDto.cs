@@ -10,6 +10,7 @@ namespace TaskFlow.Application.DTOs.User
     public class UpdateUserDto
     {
         public string Name { get; set; } = string.Empty;
+        public bool CanAccessAi { get; set; }
         public IFormFile? Image { get; set; }
     }
 }

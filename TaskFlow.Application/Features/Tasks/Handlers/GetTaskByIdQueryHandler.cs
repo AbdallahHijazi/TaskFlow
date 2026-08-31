@@ -16,15 +16,24 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
     public class GetTaskByIdQueryHandler : IRequestHandler<GetTaskByIdQuery, TaskDto>
     {
         private readonly IRepository<TaskItem> _repository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
-        public GetTaskByIdQueryHandler(IRepository<TaskItem> repository)
+        public GetTaskByIdQueryHandler(IRepository<TaskItem> repository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
+            _currentUser = currentUser;
         }
 
         public async Task<TaskDto> Handle(GetTaskByIdQuery request, CancellationToken cancellationToken)
         {
-            var task = await _repository.GetAll()
+            var query = _repository.GetAll();
+            if (!_currentUser.IsAdmin)
+            {
+                var userId = _currentUser.UserId;
+                query = query.Where(t => userId.HasValue && t.AssignedToId == userId.Value);
+            }
+
+            var task = await query
                 .AsNoTracking()
                 .Where(t => t.Id == request.Id)
                 .Select(t => new TaskDto
@@ -42,6 +51,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     Color = t.Color,
                     Icon=t.Icon,
                     CreatedById = t.CreatedBy ?? Guid.Empty,
+                    CreatedAt = t.CreatedAt,
                     ImageId = t.ImageId,
                     ImageUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/file",
                     ThumbnailUrl = t.ImageId == null ? null : $"/api/Images/{t.ImageId}/thumbnail",
