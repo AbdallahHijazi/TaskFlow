@@ -19,6 +19,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
@@ -43,6 +44,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
@@ -53,6 +55,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _mediator.Send(new DeleteInitiativeCommand(id));

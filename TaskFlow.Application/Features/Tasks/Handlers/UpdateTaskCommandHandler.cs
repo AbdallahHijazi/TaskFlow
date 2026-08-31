@@ -14,15 +14,18 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
         private readonly IRepository<TaskItem> _repository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService _imageService;
+        private readonly IWorkEventService _workEvents;
 
         public UpdateTaskCommandHandler(
             IRepository<TaskItem> repository,
             IUnitOfWork unitOfWork,
-            IImageService imageService)
+            IImageService imageService,
+            IWorkEventService workEvents)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _imageService = imageService;
+            _workEvents = workEvents;
         }
 
         public async Task<TaskDto> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)
@@ -33,6 +36,9 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
 
             if (task == null)
                 throw new NotFoundException("المهمة", request.Id);
+
+            var oldAssigneeId = task.AssignedToId;
+            var oldEndDate = task.EndDate;
 
             task.Name = request.Dto.Name.Trim();
             task.Description = request.Dto.Description?.Trim();
@@ -57,6 +63,13 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
 
             _repository.Update(task);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            if (oldAssigneeId != task.AssignedToId)
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "task_assigned", "Task assigned to you",
+                    $"You were assigned to task: {task.Name}.", oldAssigneeId?.ToString(), task.AssignedToId?.ToString(), true, cancellationToken);
+            if (oldEndDate != task.EndDate)
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "due_date_changed", "Task due date changed",
+                    $"The due date for {task.Name} changed to {task.EndDate:MMM d, yyyy}.", oldEndDate?.ToString("O"), task.EndDate?.ToString("O"), true, cancellationToken);
 
             return await _repository.GetAll()
                 .Where(t => t.Id == task.Id)

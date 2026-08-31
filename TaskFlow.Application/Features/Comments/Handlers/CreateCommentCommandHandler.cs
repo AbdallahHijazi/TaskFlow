@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.Comment;
 using TaskFlow.Application.Features.Comments.Commands;
@@ -11,11 +12,16 @@ public class CreateCommentCommandHandler : IRequestHandler<CreateCommentCommand,
 {
     private readonly IRepository<Comment> _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<TaskItem> _taskRepository;
+    private readonly IWorkEventService _workEvents;
 
-    public CreateCommentCommandHandler(IRepository<Comment> repository, IUnitOfWork unitOfWork)
+    public CreateCommentCommandHandler(IRepository<Comment> repository, IUnitOfWork unitOfWork,
+        IRepository<TaskItem> taskRepository, IWorkEventService workEvents)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _taskRepository = taskRepository;
+        _workEvents = workEvents;
     }
 
     public async Task<CommentDto> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
@@ -35,6 +41,11 @@ public class CreateCommentCommandHandler : IRequestHandler<CreateCommentCommand,
 
             _repository.Add(comment);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var task = await _taskRepository.GetAll().Where(item => item.Id == comment.TaskId)
+                .Select(item => new { item.Id, item.Name, item.AssignedToId }).FirstOrDefaultAsync(cancellationToken);
+            if (task != null)
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "comment_added", "New task comment",
+                    $"A comment was added to {task.Name}: {comment.Content}", null, comment.Content, true, cancellationToken);
 
             return new CommentDto
             {

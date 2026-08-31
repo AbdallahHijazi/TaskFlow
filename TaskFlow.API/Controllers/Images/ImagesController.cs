@@ -20,6 +20,7 @@ public class ImagesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create(IFormFile file)
     {
@@ -32,6 +33,7 @@ public class ImagesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()
     {
         var result = await _mediator.Send(new GetAllImagesQuery());
@@ -60,6 +62,7 @@ public class ImagesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(Guid id, IFormFile file)
     {
@@ -72,6 +75,7 @@ public class ImagesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _mediator.Send(new DeleteImageCommand(id));

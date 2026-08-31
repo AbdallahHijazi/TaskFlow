@@ -8,6 +8,8 @@ using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Application.DTOs.User;
 using TaskFlow.Application.Features.Users.Commands;
 using TaskFlow.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using TaskFlow.Application.Common.Security;
 
 namespace TaskFlow.Application.Features.Users.Handlers
 {
@@ -45,8 +47,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 if (string.IsNullOrWhiteSpace(request.Dto.Name))
                     throw new InvalidOperationException("اسم المستخدم مطلوب");
 
-                if (string.IsNullOrWhiteSpace(request.Dto.Email))
-                    throw new InvalidOperationException("البريد الإلكتروني مطلوب");
+                var email = EmailAddressPolicy.NormalizeAndValidate(request.Dto.Email);
 
                 if (string.IsNullOrWhiteSpace(request.Dto.Password))
                     throw new InvalidOperationException("كلمة المرور مطلوبة");
@@ -54,16 +55,19 @@ namespace TaskFlow.Application.Features.Users.Handlers
                 if (request.Dto.RoleId == Guid.Empty)
                     throw new InvalidOperationException("يجب اختيار دور للمستخدم");
                 var clientId = currentUser.ClientId ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a client. Please sign in again.");
+                if (await _repository.GetAll().AnyAsync(user => user.Email != null && user.Email.ToLower() == email, cancellationToken))
+                    throw new InvalidOperationException("This email address is already registered.");
                 var imageId = await imageService.SaveImageAsync(request.Dto.Image,cancellationToken);
                 var user = new User
                 {
                     Name = request.Dto.Name.Trim(),
-                    Email = request.Dto.Email.Trim().ToLower(),
+                    Email = email,
                     Password = _passwordHasher.HashPassword(request.Dto.Password),
                     PhoneNumber = request.Dto.PhoneNumber?.Trim(),
                     RoleId = request.Dto.RoleId,
                     ImageId = imageId
-                    ,ClientId = clientId
+                    ,ClientId = clientId,
+                    CanAccessAi = request.Dto.CanAccessAi
                 };
 
                 _repository.Add(user);
@@ -77,6 +81,7 @@ namespace TaskFlow.Application.Features.Users.Handlers
                     PhoneNumber = user.PhoneNumber,
                     RoleId = user.RoleId ?? Guid.Empty,
                     ImageId = user.ImageId,
+                    CanAccessAi = user.CanAccessAi,
                     ClientId = user.ClientId,
                     RoleName = user.Role?.RoleName ?? string.Empty,
                     CreatedAt = user.CreatedAt,

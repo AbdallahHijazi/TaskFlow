@@ -15,15 +15,24 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
     public class GetAllTasksQueryHandler : IRequestHandler<GetAllTasksQuery, List<TaskDto>>
     {
         private readonly IRepository<TaskItem> _repository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
-        public GetAllTasksQueryHandler(IRepository<TaskItem> repository)
+        public GetAllTasksQueryHandler(IRepository<TaskItem> repository, TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _repository = repository;
+            _currentUser = currentUser;
         }
 
         public async Task<List<TaskDto>> Handle(GetAllTasksQuery request, CancellationToken cancellationToken)
         {
-            var tasks = await _repository.GetAll()
+            var query = _repository.GetAll();
+            if (!_currentUser.IsAdmin)
+            {
+                var userId = _currentUser.UserId;
+                query = query.Where(t => userId.HasValue && t.AssignedToId == userId.Value);
+            }
+
+            var tasks = await query
                 .AsNoTracking()
                 .Select(t => new TaskDto
                 {

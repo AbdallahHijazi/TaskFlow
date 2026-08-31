@@ -12,6 +12,7 @@ namespace TaskFlow.Application.DTOs.User
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
+        public bool CanAccessAi { get; set; }
         public Guid RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;   
         public Guid? ImageId { get; set; }

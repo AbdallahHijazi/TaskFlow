@@ -19,6 +19,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create([FromForm] CreateTaskDto dto, CancellationToken cancellationToken)
     {
@@ -51,6 +52,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(Guid id, [FromForm] UpdateTaskDto dto, CancellationToken cancellationToken)
     {
@@ -72,6 +74,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteTaskCommand(id), cancellationToken);
