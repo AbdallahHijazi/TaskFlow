@@ -62,21 +62,7 @@ namespace TaskFlow.Infrastructure.Persistence
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            var entries = ChangeTracker.Entries<BaseEntity>();
-
-            foreach (var entry in entries)
-            {
-                if (entry.State == EntityState.Added)
-                {
-                    entry.Entity.CreatedAt = DateTime.UtcNow;
-                    entry.Entity.CreatedBy = currentUser?.UserId ?? Guid.Empty;
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    entry.Entity.UpdatedAt = DateTime.UtcNow;
-                    entry.Entity.UpdatedBy = currentUser?.UserId ?? Guid.Empty;
-                }
-            }
+            ApplyAuditFields();
 
             var clientId = CurrentClientId;
             foreach (var entry in ChangeTracker.Entries<ITenantEntity>().Where(entry => entry.State == EntityState.Added))
@@ -89,6 +75,29 @@ namespace TaskFlow.Infrastructure.Persistence
             }
 
             return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        internal async Task<int> SaveSystemChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditFields();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyAuditFields()
+        {
+            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = currentUser?.UserId ?? Guid.Empty;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedBy = currentUser?.UserId ?? Guid.Empty;
+                }
+            }
         }
 
     }
