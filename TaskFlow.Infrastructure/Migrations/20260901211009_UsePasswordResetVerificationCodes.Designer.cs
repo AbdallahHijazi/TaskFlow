@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskFlow.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TaskFlow.Infrastructure.Persistence;
 namespace TaskFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901211009_UsePasswordResetVerificationCodes")]
+    partial class UsePasswordResetVerificationCodes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -346,9 +349,6 @@ namespace TaskFlow.Infrastructure.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("InitiativeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -386,8 +386,6 @@ namespace TaskFlow.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("InitiativeId");
 
                     b.HasIndex("TaskId");
 
@@ -831,11 +829,6 @@ namespace TaskFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskFlow.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("TaskFlow.Domain.Entities.Initiative", "Initiative")
-                        .WithMany()
-                        .HasForeignKey("InitiativeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("TaskFlow.Domain.Entities.User", "RecipientUser")
                         .WithMany()
                         .HasForeignKey("RecipientUserId")
@@ -846,8 +839,6 @@ namespace TaskFlow.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Initiative");
 
                     b.Navigation("RecipientUser");
 

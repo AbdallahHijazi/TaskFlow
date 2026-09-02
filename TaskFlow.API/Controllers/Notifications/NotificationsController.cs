@@ -22,7 +22,7 @@ public class NotificationsController : ControllerBase
         var items = await _db.Notifications.AsNoTracking()
             .Where(item => item.RecipientUserId == _currentUser.UserId.Value)
             .OrderByDescending(item => item.CreatedAt).Take(50)
-            .Select(item => new { item.Id, item.TaskId, item.Type, item.Title, item.Message, item.IsRead, item.CreatedAt })
+            .Select(item => new { item.Id, item.TaskId, item.InitiativeId, item.Type, item.Title, item.Message, item.IsRead, item.CreatedAt })
             .ToListAsync(ct);
         return Ok(items);
     }

@@ -1,6 +1,6 @@
 namespace TaskFlow.Application.Common.Interfaces;
 
-public record RealtimeNotification(Guid Id, Guid? TaskId, string Type, string Title, string Message,
+public record RealtimeNotification(Guid Id, Guid? TaskId, Guid? InitiativeId, string Type, string Title, string Message,
     bool IsRead, DateTime CreatedAt);
 
 public interface INotificationRealtimePublisher
