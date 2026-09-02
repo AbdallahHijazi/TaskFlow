@@ -15,17 +15,20 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService _imageService;
         private readonly IWorkEventService _workEvents;
+        private readonly IRepository<Status> _statusRepository;
 
         public UpdateTaskCommandHandler(
             IRepository<TaskItem> repository,
             IUnitOfWork unitOfWork,
             IImageService imageService,
-            IWorkEventService workEvents)
+            IWorkEventService workEvents,
+            IRepository<Status> statusRepository)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _imageService = imageService;
             _workEvents = workEvents;
+            _statusRepository = statusRepository;
         }
 
         public async Task<TaskDto> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)
@@ -39,6 +42,7 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
 
             var oldAssigneeId = task.AssignedToId;
             var oldEndDate = task.EndDate;
+            var oldStatusId = task.StatusId;
 
             task.Name = request.Dto.Name.Trim();
             task.Description = request.Dto.Description?.Trim();
@@ -70,6 +74,16 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
             if (oldEndDate != task.EndDate)
                 await _workEvents.RecordAsync(task.AssignedToId, task.Id, "due_date_changed", "Task due date changed",
                     $"The due date for {task.Name} changed to {task.EndDate:MMM d, yyyy}.", oldEndDate?.ToString("O"), task.EndDate?.ToString("O"), true, cancellationToken);
+            if (oldStatusId != task.StatusId)
+            {
+                var statusIds = new[] { oldStatusId, task.StatusId }.Where(id => id.HasValue).Select(id => id!.Value).ToArray();
+                var statusNames = await _statusRepository.GetAll().Where(status => statusIds.Contains(status.Id))
+                    .ToDictionaryAsync(status => status.Id, status => status.Name, cancellationToken);
+                var oldStatusName = oldStatusId.HasValue && statusNames.TryGetValue(oldStatusId.Value, out var oldName) ? oldName : "No status";
+                var newStatusName = task.StatusId.HasValue && statusNames.TryGetValue(task.StatusId.Value, out var newName) ? newName : "No status";
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "status_changed", "Task status changed",
+                    $"{task.Name} moved from {oldStatusName} to {newStatusName}.", oldStatusName, newStatusName, true, cancellationToken);
+            }
 
             return await _repository.GetAll()
                 .Where(t => t.Id == task.Id)

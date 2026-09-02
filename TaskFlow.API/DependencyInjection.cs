@@ -32,7 +32,7 @@ public static class DependencyInjection
             options.AddPolicy("Default", policy =>
             {
                 if (corsOrigins.Length > 0)
-                    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+                    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                 else
                     policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
             });

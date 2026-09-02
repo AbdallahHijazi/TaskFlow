@@ -25,15 +25,17 @@ public class AuthController : ControllerBase
     private readonly IUserPasswordHasher _passwordHasher;
     private readonly SmtpOptions _smtp;
     private readonly ILogger<AuthController> _logger;
+    private readonly string _resetCodeSecret;
 
     public AuthController(IMediator mediator, AppDbContext db, IUserPasswordHasher passwordHasher,
-        IOptions<SmtpOptions> smtp, ILogger<AuthController> logger)
+        IOptions<SmtpOptions> smtp, ILogger<AuthController> logger, IConfiguration configuration)
     {
         _mediator = mediator;
         _db = db;
         _passwordHasher = passwordHasher;
         _smtp = smtp.Value;
         _logger = logger;
+        _resetCodeSecret = configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT secret is required.");
     }
 
     [AllowAnonymous]
@@ -41,7 +43,7 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto dto, CancellationToken cancellationToken)
     {
-        const string responseMessage = "If an account exists for this email, a password reset link has been sent.";
+        const string responseMessage = "If an account exists for this email, a 6-digit verification code has been sent.";
         var email = dto?.Email?.Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(email)) return Ok(new { message = responseMessage });
 
@@ -56,13 +58,13 @@ public class AuthController : ControllerBase
             return Ok(new { message = responseMessage });
         foreach (var item in previousTokens) item.UsedAtUtc = now;
 
-        var rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
         _db.PasswordResetTokens.Add(new PasswordResetToken
         {
             UserId = user.Id,
-            TokenHash = HashToken(rawToken),
+            TokenHash = HashResetCode(email, code),
             CreatedAtUtc = now,
-            ExpiresAtUtc = now.AddMinutes(30)
+            ExpiresAtUtc = now.AddMinutes(10)
         });
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -74,7 +76,6 @@ public class AuthController : ControllerBase
         {
             try
             {
-                var resetUrl = $"{_smtp.AppUrl.TrimEnd('/')}/auth/reset-password?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(rawToken)}";
                 using var client = new SmtpClient(_smtp.Host, _smtp.Port)
                 {
                     EnableSsl = _smtp.UseSsl,
@@ -83,9 +84,9 @@ public class AuthController : ControllerBase
                 using var mail = new MailMessage
                 {
                     From = new MailAddress(_smtp.Username, _smtp.FromName),
-                    Subject = "Reset your ORQIST password",
-                    Body = $"Hello {user.Name},\n\nUse this secure link to reset your ORQIST password:\n{resetUrl}\n\nThis link expires in 30 minutes and can only be used once. If you did not request this, you can ignore this email.",
-                    IsBodyHtml = false
+                    Subject = $"{code} is your ORQIST verification code",
+                    Body = BuildResetCodeEmail(user.Name, code),
+                    IsBodyHtml = true
                 };
                 mail.To.Add(user.Email);
                 await client.SendMailAsync(mail, cancellationToken);
@@ -101,24 +102,60 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [EnableRateLimiting("password-reset")]
+    [HttpPost("verify-reset-code")]
+    public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeRequestDto dto, CancellationToken cancellationToken)
+    {
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
+            return BadRequest(new { message = "Enter the 6-digit code sent to your email." });
+
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var code = dto.Code.Trim();
+        if (code.Length != 6 || !code.All(char.IsDigit))
+            return BadRequest(new { message = "Enter the 6-digit code sent to your email." });
+
+        var now = DateTime.UtcNow;
+        var user = await _db.Users.FirstOrDefaultAsync(item => item.Email != null && item.Email.ToLower() == email, cancellationToken);
+        var resetCode = user == null ? null : await _db.PasswordResetTokens
+            .Where(item => item.UserId == user.Id && item.UsedAtUtc == null)
+            .OrderByDescending(item => item.CreatedAtUtc).FirstOrDefaultAsync(cancellationToken);
+
+        if (resetCode == null || resetCode.ExpiresAtUtc <= now || resetCode.FailedAttempts >= 5)
+            return BadRequest(new { message = "This verification code is invalid or has expired. Request a new code." });
+
+        var submittedHash = HashResetCode(email, code);
+        if (!CryptographicOperations.FixedTimeEquals(Convert.FromHexString(resetCode.TokenHash), Convert.FromHexString(submittedHash)))
+        {
+            resetCode.FailedAttempts++;
+            await _db.SaveChangesAsync(cancellationToken);
+            return BadRequest(new { message = "The verification code is incorrect." });
+        }
+
+        return Ok(new { resetToken = CreateResetGrant(resetCode.Id, email, now.AddMinutes(10)) });
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset")]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto dto, CancellationToken cancellationToken)
     {
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Token) ||
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.ResetToken) ||
             string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
-            return BadRequest(new { message = "A valid reset link and a password of at least 8 characters are required." });
+            return BadRequest(new { message = "A verified reset request and a password of at least 8 characters are required." });
 
         var email = dto.Email.Trim().ToLowerInvariant();
-        var tokenHash = HashToken(dto.Token.Trim());
         var now = DateTime.UtcNow;
-        var resetToken = await _db.PasswordResetTokens.Include(item => item.User)
-            .FirstOrDefaultAsync(item => item.TokenHash == tokenHash && item.User.Email != null &&
-                item.User.Email.ToLower() == email, cancellationToken);
+        var resetCodeId = ValidateResetGrant(dto.ResetToken, email, now);
+        if (resetCodeId == null)
+            return BadRequest(new { message = "Your verification session is invalid or has expired. Request a new code." });
 
-        if (resetToken == null || resetToken.UsedAtUtc != null || resetToken.ExpiresAtUtc <= now)
-            return BadRequest(new { message = "This password reset link is invalid or has expired." });
+        var user = await _db.Users.FirstOrDefaultAsync(item => item.Email != null && item.Email.ToLower() == email, cancellationToken);
+        var resetToken = user == null ? null : await _db.PasswordResetTokens
+            .FirstOrDefaultAsync(item => item.Id == resetCodeId && item.UserId == user.Id && item.UsedAtUtc == null, cancellationToken);
 
-        resetToken.User.Password = _passwordHasher.HashPassword(dto.NewPassword);
+        if (resetToken == null || resetToken.ExpiresAtUtc <= now)
+            return BadRequest(new { message = "Your verification session is invalid or has expired. Request a new code." });
+
+        user!.Password = _passwordHasher.HashPassword(dto.NewPassword);
         resetToken.UsedAtUtc = now;
         var refreshTokens = await _db.RefreshTokens.Where(item => item.UserId == resetToken.UserId && !item.IsRevoked).ToListAsync(cancellationToken);
         foreach (var item in refreshTokens) { item.IsRevoked = true; item.RevokedAtUtc = now; }
@@ -126,7 +163,50 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Your password has been reset successfully. You can now sign in." });
     }
 
-    private static string HashToken(string token) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+    private string HashResetCode(string email, string code) => Convert.ToHexString(HMACSHA256.HashData(
+        System.Text.Encoding.UTF8.GetBytes(_resetCodeSecret), System.Text.Encoding.UTF8.GetBytes($"{email}:{code}")));
+
+    private string CreateResetGrant(Guid resetCodeId, string email, DateTime expiresAtUtc)
+    {
+        var payload = $"{resetCodeId}:{new DateTimeOffset(expiresAtUtc).ToUnixTimeSeconds()}:{email}";
+        var encodedPayload = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(payload));
+        var signature = Convert.ToBase64String(HMACSHA256.HashData(System.Text.Encoding.UTF8.GetBytes(_resetCodeSecret), System.Text.Encoding.UTF8.GetBytes(encodedPayload)));
+        return $"{WebUtility.UrlEncode(encodedPayload)}.{WebUtility.UrlEncode(signature)}";
+    }
+
+    private Guid? ValidateResetGrant(string grant, string email, DateTime now)
+    {
+        var parts = grant.Split('.', 2);
+        if (parts.Length != 2) return null;
+        try
+        {
+            var encodedPayload = WebUtility.UrlDecode(parts[0]);
+            var suppliedSignature = Convert.FromBase64String(WebUtility.UrlDecode(parts[1]));
+            var expectedSignature = HMACSHA256.HashData(System.Text.Encoding.UTF8.GetBytes(_resetCodeSecret), System.Text.Encoding.UTF8.GetBytes(encodedPayload));
+            if (!CryptographicOperations.FixedTimeEquals(suppliedSignature, expectedSignature)) return null;
+            var payload = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encodedPayload)).Split(':', 3);
+            if (payload.Length != 3 || !Guid.TryParse(payload[0], out var id) || !long.TryParse(payload[1], out var expiry) || payload[2] != email) return null;
+            return DateTimeOffset.FromUnixTimeSeconds(expiry).UtcDateTime > now ? id : null;
+        }
+        catch (FormatException) { return null; }
+    }
+
+    private static string BuildResetCodeEmail(string? name, string code)
+    {
+        var safeName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(name) ? "there" : name);
+        return $$"""
+        <!doctype html><html><body style="margin:0;background:#f5f7fb;font-family:Arial,sans-serif;color:#172033">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f7fb;padding:32px 16px"><tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#fff;border:1px solid #e5e9f2;border-radius:20px;overflow:hidden">
+        <tr><td style="padding:26px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff"><div style="font-size:24px;font-weight:800;letter-spacing:.08em">ORQIST</div><div style="margin-top:5px;font-size:12px;opacity:.82">WORK EXECUTION PLATFORM</div></td></tr>
+        <tr><td style="padding:34px 32px"><h1 style="margin:0 0 12px;font-size:23px">Reset your password</h1><p style="margin:0 0 22px;color:#64748b;line-height:1.65">Hello {{safeName}}, use this verification code to continue resetting your ORQIST password.</p>
+        <div style="padding:20px;border:1px solid #ddd9fe;border-radius:16px;background:#f7f5ff;text-align:center"><div style="font-size:11px;font-weight:700;color:#6d4ce8;letter-spacing:.12em">VERIFICATION CODE</div><div style="margin-top:8px;font-size:36px;font-weight:800;letter-spacing:.22em;color:#30236f">{{code}}</div></div>
+        <p style="margin:22px 0 0;color:#64748b;font-size:13px;line-height:1.6">This code expires in <strong>10 minutes</strong> and can be used once. Never share it with anyone.</p>
+        <p style="margin:14px 0 0;color:#94a3b8;font-size:12px">If you did not request a password reset, you can safely ignore this email.</p></td></tr>
+        <tr><td style="padding:18px 32px;border-top:1px solid #edf0f5;color:#94a3b8;font-size:11px">Sent securely by ORQIST Notifications</td></tr></table>
+        </td></tr></table></body></html>
+        """;
+    }
 
     [AllowAnonymous]
     [HttpPost("login")]
