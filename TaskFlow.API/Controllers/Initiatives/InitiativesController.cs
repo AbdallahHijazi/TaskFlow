@@ -30,9 +30,17 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? assignedToId,
+        [FromQuery] Guid? statusId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllInitiativesQuery());
+        var result = await _mediator.Send(
+            new GetAllInitiativesQuery(assignedToId, statusId, pageNumber, pageSize, search),
+            cancellationToken);
         return Ok(result);
     }
 

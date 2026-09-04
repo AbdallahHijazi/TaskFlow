@@ -7,6 +7,7 @@ using TaskFlow.API.Infrastructure;
 using TaskFlow.API.Services;
 using TaskFlow.Application.Common.Behaviors;
 using TaskFlow.Application.Features.Statuses.Commands;
+using TaskFlow.Application.Common.Interfaces;
 using TaskFlow.Domain.Interfaces;
 using TaskFlow.Infrastructure;
 using TaskFlow.Infrastructure.Persistence;
@@ -50,10 +51,21 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (dbContext.Database.IsRelational())
-        await dbContext.Database.MigrateAsync();
+    if (args.Contains("--reset-demo-data", StringComparer.OrdinalIgnoreCase))
+    {
+        if (!app.Environment.IsDevelopment())
+            throw new InvalidOperationException("Demo data reset is allowed only in Development.");
 
-    await DatabaseSeeder.SeedReferenceDataAsync(dbContext);
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IUserPasswordHasher>();
+        await DemoDataSeeder.ResetAndSeedAsync(dbContext, passwordHasher);
+    }
+    else
+    {
+        if (dbContext.Database.IsRelational())
+            await dbContext.Database.MigrateAsync();
+
+        await DatabaseSeeder.SeedReferenceDataAsync(dbContext);
+    }
 }
 
 if (app.Environment.IsDevelopment())

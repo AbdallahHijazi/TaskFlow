@@ -119,7 +119,7 @@ public class GetUserTasksEndpointIntegrationTests : IClassFixture<TaskFlowApiFac
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("DEV_ONLY_CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_2026"));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TaskFlowApiFactory.TestJwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
             issuer: "TaskFlow.Dev",

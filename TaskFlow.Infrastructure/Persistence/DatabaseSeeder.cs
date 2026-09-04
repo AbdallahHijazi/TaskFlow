@@ -16,6 +16,7 @@ public static class DatabaseSeeder
         foreach (var clientId in clientIds)
         {
             var statusNames = await context.Statuses.IgnoreQueryFilters().Where(status => status.ClientId == clientId).Select(status => status.Name).ToListAsync(cancellationToken);
+            AddStatusIfMissing(context, statusNames, clientId, "New", "Newly created work that has not started yet.", "#94A3B8");
             AddStatusIfMissing(context, statusNames, clientId, "Planned", "Work that has not started yet.", "#64748B");
             AddStatusIfMissing(context, statusNames, clientId, "In Progress", "Work currently in progress.", "#2563EB");
             AddStatusIfMissing(context, statusNames, clientId, "At Risk", "Work requiring attention.", "#DC2626");

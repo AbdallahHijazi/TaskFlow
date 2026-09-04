@@ -44,6 +44,9 @@ public static class DependencyInjection
     private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();
+        if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || jwtSettings.SecretKey.Length < 32)
+            throw new InvalidOperationException(
+                "Jwt:SecretKey must be supplied through environment variables or a secret store and contain at least 32 characters.");
         var keyBytes = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 
         services

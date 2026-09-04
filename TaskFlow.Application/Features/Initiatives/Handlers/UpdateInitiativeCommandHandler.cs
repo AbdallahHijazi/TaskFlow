@@ -54,7 +54,13 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             initiative.Description = request.Dto.Description;
             initiative.StartDate = request.Dto.StartDate;
             initiative.EndDate = request.Dto.EndDate;
-            initiative.Progress = request.Dto.Progress;
+            // Progress is owned by the initiative's tasks and cannot be edited independently.
+            initiative.Progress = await _repository.GetAll()
+                .Where(i => i.Id == request.Id)
+                .Select(i => i.Tasks.Any()
+                    ? i.Tasks.Average(task => task.Progress ?? 0)
+                    : 0)
+                .SingleAsync(cancellationToken);
             initiative.IsAISuggested = request.Dto.IsAISuggested;
             initiative.StatusId = request.Dto.StatusId;
             initiative.AssignedToId = request.Dto.AssignedTo;

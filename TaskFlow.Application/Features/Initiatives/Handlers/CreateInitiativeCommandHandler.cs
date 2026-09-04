@@ -44,7 +44,8 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Description = request.Dto.Description?.Trim(),
                     StartDate = request.Dto.StartDate,
                     EndDate = request.Dto.EndDate,
-                    Progress = request.Dto.Progress,
+                    // Initiative progress is derived from its tasks. A new initiative has no tasks.
+                    Progress = 0,
                     IsAISuggested = request.Dto.IsAISuggested,
                     AssignedToId = currentUser.UserId
                         ?? throw new TaskFlow.Domain.Exceptions.UnauthorizedException("Your session does not contain a user. Please sign in again."),
