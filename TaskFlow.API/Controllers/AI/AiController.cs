@@ -104,6 +104,16 @@ public class AiController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("save-generated-initiatives")]
+    public async Task<ActionResult<SaveGeneratedInitiativesBatchResponse>> SaveGeneratedInitiatives(
+        [FromBody] SaveGeneratedInitiativesBatchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new SaveGeneratedInitiativesBatchCommand(request), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost("generate-tasks-for-initiative")]
     public async Task<ActionResult<GeneratedTasksPreview>>GenerateTasksForInitiative([FromBody] GenerateTasksForInitiativeRequest request, 
                                                                                                 CancellationToken cancellationToken)

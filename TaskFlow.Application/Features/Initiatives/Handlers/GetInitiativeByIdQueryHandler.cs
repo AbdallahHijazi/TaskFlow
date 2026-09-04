@@ -43,7 +43,9 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
                     Description = i.Description,
                     StartDate = i.StartDate,
                     EndDate = i.EndDate,
-                    Progress = i.Progress,
+                    Progress = i.Tasks.Any()
+                        ? i.Tasks.Average(task => task.Progress ?? 0)
+                        : 0,
                     IsAISuggested = i.IsAISuggested,
                     ImageId = i.ImageId,
                     AssignedTo = i.AssignedToId,

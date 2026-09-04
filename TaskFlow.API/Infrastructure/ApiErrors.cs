@@ -7,6 +7,8 @@ internal static class ApiErrors
 {
     public static (int StatusCode, ApiErrorResponse Body) Map(Exception ex, string traceId) => ex switch
     {
+        OperationCanceledException => (StatusCodes.Status504GatewayTimeout, Build(
+            "The operation took too long to complete. Please try again.", "AI_TIMEOUT", traceId)),
         ValidationException v => (StatusCodes.Status400BadRequest, Build(v.Message, "400", traceId, v.Errors)),
         NotFoundException n => (StatusCodes.Status404NotFound, Build(n.Message, "404", traceId)),
         BadRequestException b => (StatusCodes.Status400BadRequest, Build(b.Message, "400", traceId)),
@@ -54,6 +56,7 @@ internal static class ApiErrors
             "403" => "You do not have permission to perform this action.",
             "404" => "The requested resource could not be found.",
             "409" => "This action conflicts with existing data.",
+            "AI_TIMEOUT" => "The operation took too long to complete. Please try again.",
             _ => "An unexpected server error occurred. Please try again shortly."
         };
     }

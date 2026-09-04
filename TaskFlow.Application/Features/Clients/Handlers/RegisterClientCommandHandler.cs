@@ -44,6 +44,7 @@ public class RegisterClientCommandHandler : IRequestHandler<RegisterClientComman
         }
         var client=new Client { Name=clientName, ContactEmail=email, IsActive=true };
         var user=new User { ClientId=client.Id, Client=client, Name=dto.AdminName.Trim(), Email=email, PhoneNumber=dto.PhoneNumber.Trim(), Password=passwordHasher.HashPassword(dto.Password), RoleId=role.RoleId };
+        statuses.Add(new Status { ClientId=client.Id, Name="New", Description="Newly created work that has not started yet.", Color="#94A3B8" });
         statuses.Add(new Status { ClientId=client.Id, Name="Planned", Description="Work that has not started yet.", Color="#64748B" });
         statuses.Add(new Status { ClientId=client.Id, Name="In Progress", Description="Work currently in progress.", Color="#2563EB" });
         statuses.Add(new Status { ClientId=client.Id, Name="At Risk", Description="Work requiring attention.", Color="#DC2626" });

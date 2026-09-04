@@ -31,9 +31,18 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? assignedToId,
+        [FromQuery] Guid? statusId,
+        [FromQuery] Guid? initiativeId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllTasksQuery(), cancellationToken);
+        var result = await _mediator.Send(
+            new GetAllTasksQuery(assignedToId, statusId, initiativeId, pageNumber, pageSize, search),
+            cancellationToken);
         return Ok(result);
     }
 
