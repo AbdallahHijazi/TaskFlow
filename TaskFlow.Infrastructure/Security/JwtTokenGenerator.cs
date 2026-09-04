@@ -31,7 +31,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Name ?? string.Empty),
             new(ClaimTypes.Role, roleName)
-            ,new("client_id", user.ClientId.ToString())
+            ,new("client_id", user.ClientId.ToString()),
+            new("ai_access", (user.CanAccessAi || roleName.Equals("Admin", StringComparison.OrdinalIgnoreCase)).ToString().ToLowerInvariant())
         };
 
         var token = new JwtSecurityToken(

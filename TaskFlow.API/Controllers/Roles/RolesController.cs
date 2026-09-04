@@ -8,7 +8,7 @@ namespace TaskFlow.API.Controllers.Roles;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize(Roles = "Admin")]
 public class RolesController : ControllerBase
 {
     private readonly IMediator _mediator;

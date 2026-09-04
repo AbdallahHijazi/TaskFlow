@@ -22,15 +22,21 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
         private readonly IRepository<Initiative> _initiativeRepository;
         private readonly IRepository<TaskItem> _taskRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRepository<Status> _statusRepository;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
         public SaveGeneratedTasksCommandHandler(
             IRepository<Initiative> initiativeRepository,
             IRepository<TaskItem> taskRepository,
-            IUnitOfWork unitOfWork)
+            IRepository<Status> statusRepository,
+            IUnitOfWork unitOfWork,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _initiativeRepository = initiativeRepository;
             _taskRepository = taskRepository;
             _unitOfWork = unitOfWork;
+            _statusRepository = statusRepository;
+            _currentUser = currentUser;
         }
 
         public async Task<SaveGeneratedTasksResponse> Handle(
@@ -41,6 +47,19 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
             ArgumentNullException.ThrowIfNull(command.Request);
 
             var request = command.Request;
+
+            var newStatus = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                .FirstOrDefaultAsync(
+                    _statusRepository.GetAll().Where(status => status.Name != null && status.Name.ToLower() == "new"),
+                    cancellationToken);
+
+            if (newStatus is null)
+            {
+                throw new InvalidOperationException("The default 'New' status is not configured for this workspace.");
+            }
+
+            var currentUserId = _currentUser.UserId
+                ?? throw new UnauthorizedException("Your session does not contain a user. Please sign in again.");
 
             var initiative =
                 _initiativeRepository.Get(request.InitiativeId);
@@ -114,8 +133,8 @@ namespace TaskFlow.Application.Features.AI.TaskGeneration.Handlers
                     Progress = 0,
 
                     InitiativeId = initiative.Id,
-                    StatusId = request.StatusId,
-                    AssignedToId = request.AssignedToId,
+                    StatusId = newStatus.Id,
+                    AssignedToId = currentUserId,
 
                     Color = taskStyle.Color,
                     Icon = taskStyle.Icon,

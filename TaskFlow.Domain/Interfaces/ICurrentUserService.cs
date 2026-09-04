@@ -5,5 +5,6 @@ namespace TaskFlow.Domain.Interfaces
     {
         Guid? UserId { get; }
         Guid? ClientId { get; }
+        bool IsAdmin => false;
     }
 }

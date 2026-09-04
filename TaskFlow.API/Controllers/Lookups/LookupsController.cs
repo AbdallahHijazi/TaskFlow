@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TaskFlow.Application.DTOs.Lookup;
 using TaskFlow.Application.Features.Lookups.Commands;
 
@@ -8,6 +9,7 @@ namespace TaskFlow.API.Controllers.Lookups
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class LookupsController : ControllerBase
     {
         private readonly IMediator middleware;
@@ -46,6 +48,7 @@ namespace TaskFlow.API.Controllers.Lookups
             return Ok(lookups);
         }
         [HttpGet("roles")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRoles()
         {
             var lookups = await middleware.Send(new GetRoleLookupsQuery());

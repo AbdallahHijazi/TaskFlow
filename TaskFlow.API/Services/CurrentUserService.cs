@@ -31,5 +31,7 @@ namespace TaskFlow.API.Services
                 return Guid.TryParse(value, out var id) ? id : null;
             }
         }
+
+        public bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Admin") == true;
     }
 }

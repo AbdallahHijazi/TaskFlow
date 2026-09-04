@@ -19,6 +19,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create([FromForm] CreateTaskDto dto, CancellationToken cancellationToken)
     {
@@ -30,9 +31,18 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? assignedToId,
+        [FromQuery] Guid? statusId,
+        [FromQuery] Guid? initiativeId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllTasksQuery(), cancellationToken);
+        var result = await _mediator.Send(
+            new GetAllTasksQuery(assignedToId, statusId, initiativeId, pageNumber, pageSize, search),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -51,6 +61,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(Guid id, [FromForm] UpdateTaskDto dto, CancellationToken cancellationToken)
     {
@@ -72,6 +83,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteTaskCommand(id), cancellationToken);

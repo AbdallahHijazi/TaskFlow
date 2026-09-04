@@ -12,21 +12,37 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
     {
         private readonly IRepository<TaskItem> _taskRepository;
         private readonly IRepository<Status> _statusRepository;
+        private readonly IRepository<TaskDependency> _dependencyRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
+        private readonly IWorkEventService _workEvents;
 
         public UpdateTaskStatusCommandHandler(
             IRepository<TaskItem> taskRepository,
             IRepository<Status> statusRepository,
-            IUnitOfWork unitOfWork)
+            IRepository<TaskDependency> dependencyRepository,
+            IUnitOfWork unitOfWork,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser,
+            IWorkEventService workEvents)
         {
             _taskRepository = taskRepository;
             _statusRepository = statusRepository;
+            _dependencyRepository = dependencyRepository;
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
+            _workEvents = workEvents;
         }
 
         public async Task<TaskDto> Handle(UpdateTaskStatusCommand request, CancellationToken cancellationToken)
         {
-            var task = await _taskRepository.GetAll()
+            var taskQuery = _taskRepository.GetAll();
+            if (!_currentUser.IsAdmin)
+            {
+                var userId = _currentUser.UserId;
+                taskQuery = taskQuery.Where(t => userId.HasValue && t.AssignedToId == userId.Value);
+            }
+
+            var task = await taskQuery
                 .Where(t => t.Id == request.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -42,10 +58,48 @@ namespace TaskFlow.Application.Features.Tasks.Handlers
                     throw new NotFoundException("الحالة", request.Dto.StatusId.Value);
             }
 
+            if (request.Dto.StatusId.HasValue)
+            {
+                var targetStatusName = await _statusRepository.GetAll()
+                    .Where(status => status.Id == request.Dto.StatusId.Value)
+                    .Select(status => status.Name)
+                    .FirstOrDefaultAsync(cancellationToken);
+                var completing = targetStatusName != null && new[] { "completed", "complete", "done", "closed" }
+                    .Contains(targetStatusName.Trim().ToLowerInvariant());
+
+                if (completing)
+                {
+                    var blockers = await _dependencyRepository.GetAll()
+                        .Where(dependency => dependency.SuccessorId == task.Id && dependency.Predecessor != null)
+                        .Select(dependency => new
+                        {
+                            Name = dependency.Predecessor!.Name,
+                            Progress = dependency.Predecessor.Progress,
+                            StatusName = dependency.Predecessor.Status == null ? null : dependency.Predecessor.Status.Name
+                        })
+                        .ToListAsync(cancellationToken);
+                    var completedNames = new[] { "completed", "complete", "done", "closed" };
+                    var incomplete = blockers.Where(blocker => blocker.Progress < 100 &&
+                            !completedNames.Contains((blocker.StatusName ?? string.Empty).Trim().ToLowerInvariant()))
+                        .Select(blocker => blocker.Name ?? "Unnamed task").ToList();
+
+                    if (incomplete.Count > 0)
+                        throw new BadRequestException($"This task is blocked by: {string.Join(", ", incomplete)}.");
+                }
+            }
+
+            var oldStatusName = await _statusRepository.GetAll().Where(status => status.Id == task.StatusId)
+                .Select(status => status.Name).FirstOrDefaultAsync(cancellationToken);
             task.StatusId = request.Dto.StatusId;
 
             _taskRepository.Update(task);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var newStatusName = await _statusRepository.GetAll().Where(status => status.Id == task.StatusId)
+                .Select(status => status.Name).FirstOrDefaultAsync(cancellationToken);
+            if (!string.Equals(oldStatusName, newStatusName, StringComparison.OrdinalIgnoreCase))
+                await _workEvents.RecordAsync(task.AssignedToId, task.Id, "status_changed", "Task status changed",
+                    $"{task.Name} moved from {oldStatusName ?? "No status"} to {newStatusName ?? "No status"}.",
+                    oldStatusName, newStatusName, true, cancellationToken);
 
             return await _taskRepository.GetAll()
                 .Where(t => t.Id == task.Id)

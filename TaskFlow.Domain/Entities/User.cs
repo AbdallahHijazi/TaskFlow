@@ -15,6 +15,7 @@ namespace TaskFlow.Domain.Entities
         public string? Password { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
+        public bool CanAccessAi { get; set; }
         public Guid? RoleId { get; set; }
         public Guid? ImageId { get; set; }
         public Guid ClientId { get; set; }
@@ -26,5 +27,6 @@ namespace TaskFlow.Domain.Entities
         public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
     }
 }

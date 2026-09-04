@@ -8,7 +8,7 @@ namespace TaskFlow.API.Controllers.DependencyTypes;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class DependencyTypesController : ControllerBase
 {
     private readonly IMediator _mediator;

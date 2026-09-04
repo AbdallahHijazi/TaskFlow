@@ -23,19 +23,22 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
         private readonly IRepository<Status> _statusRepository;
         private readonly IRepository<User> _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TaskFlow.Domain.Interfaces.ICurrentUserService _currentUser;
 
         public SaveGeneratedInitiativeCommandHandler(
             IRepository<Initiative> initiativeRepository,
             IRepository<TaskItem> taskRepository,
             IRepository<Status> statusRepository,
             IRepository<User> userRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            TaskFlow.Domain.Interfaces.ICurrentUserService currentUser)
         {
             _initiativeRepository = initiativeRepository;
             _taskRepository = taskRepository;
             _statusRepository = statusRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
         }
 
         public async Task<SaveGeneratedInitiativeResponse> Handle(
@@ -47,27 +50,18 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 
             var request = command.Request;
 
-            var statusExists =
-                _statusRepository.GetAll()
-                    .Any(status => status.Id == request.StatusId);
+            var newStatus = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                .FirstOrDefaultAsync(
+                    _statusRepository.GetAll().Where(status => status.Name != null && status.Name.ToLower() == "new"),
+                    cancellationToken);
 
-            if (!statusExists)
+            if (newStatus is null)
             {
-                throw new NotFoundException(
-                    "الحالة",
-                    request.StatusId);
+                throw new InvalidOperationException("The default 'New' status is not configured for this workspace.");
             }
 
-            var assignedUserExists =
-                _userRepository.GetAll()
-                    .Any(user => user.Id == request.AssignedToId);
-
-            if (!assignedUserExists)
-            {
-                throw new NotFoundException(
-                    "المستخدم المسؤول",
-                    request.AssignedToId);
-            }
+            var currentUserId = _currentUser.UserId
+                ?? throw new UnauthorizedException("Your session does not contain a user. Please sign in again.");
 
             var initiativeStyle = WorkItemStyleDefaults.ForInitiative(request.Name, request.Description, request.Color, request.Icon);
             var initiative = new Initiative
@@ -87,8 +81,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
                 Color = initiativeStyle.Color,
                 Icon = initiativeStyle.Icon,
 
-                StatusId = request.StatusId,
-                AssignedToId = request.AssignedToId
+                StatusId = newStatus.Id,
+                AssignedToId = currentUserId
             };
 
             _initiativeRepository.Add(initiative);
@@ -115,8 +109,8 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Handlers
 
                     InitiativeId = initiative.Id,
 
-                    StatusId = request.StatusId,
-                    AssignedToId = request.AssignedToId,
+                    StatusId = newStatus.Id,
+                    AssignedToId = currentUserId,
 
                     ParentId = null
                 };

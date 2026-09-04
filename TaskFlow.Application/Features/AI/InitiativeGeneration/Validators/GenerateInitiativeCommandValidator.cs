@@ -28,13 +28,6 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Validators
                 .WithMessage(
                     "يرجى كتابة وصف واضح للمبادرة المطلوبة، مثل: أنشئ مبادرة لنظام إدارة عيادة.");
 
-            RuleFor(x => x.Request.StatusId)
-                .NotEmpty()
-                .WithMessage("حالة المبادرة مطلوبة.");
-
-            RuleFor(x => x.Request.AssignedToId)
-                .NotEmpty()
-                .WithMessage("المستخدم المسؤول عن المبادرة مطلوب.");
         }
         private static bool ContainsMeaningfulDescription(string? prompt)
         {

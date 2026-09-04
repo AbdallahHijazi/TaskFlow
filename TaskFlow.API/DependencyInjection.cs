@@ -13,6 +13,11 @@ public static class DependencyInjection
     {
         services.AddCorsPolicy(configuration);
         services.AddJwtAuthentication(configuration);
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("AiAccess", policy => policy.RequireAssertion(context =>
+                context.User.IsInRole("Admin") || context.User.HasClaim("ai_access", "true")));
+        });
         services.AddSwaggerDocumentation();
 
         return services;
@@ -27,7 +32,7 @@ public static class DependencyInjection
             options.AddPolicy("Default", policy =>
             {
                 if (corsOrigins.Length > 0)
-                    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+                    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                 else
                     policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
             });
@@ -39,6 +44,9 @@ public static class DependencyInjection
     private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();
+        if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || jwtSettings.SecretKey.Length < 32)
+            throw new InvalidOperationException(
+                "Jwt:SecretKey must be supplied through environment variables or a secret store and contain at least 32 characters.");
         var keyBytes = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 
         services
@@ -55,6 +63,16 @@ public static class DependencyInjection
                     ValidAudience = jwtSettings.Audience,
                     IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                     ClockSkew = TimeSpan.Zero
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"];
+                        if (!string.IsNullOrWhiteSpace(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/notifications"))
+                            context.Token = token;
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

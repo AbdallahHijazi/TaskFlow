@@ -15,6 +15,7 @@ namespace TaskFlow.Application.DTOs.User
         public string ConfirmPassword { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public Guid RoleId { get; set; }
+        public bool CanAccessAi { get; set; }
         public IFormFile? Image { get; set; }
     }
 }

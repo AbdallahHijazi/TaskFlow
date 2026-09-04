@@ -42,14 +42,6 @@ namespace TaskFlow.Application.Features.AI.InitiativeGeneration.Validators
                     .WithMessage(
                         "تاريخ نهاية المبادرة يجب ألا يسبق تاريخ البداية.");
 
-                RuleFor(x => x.Request.StatusId)
-                    .NotEmpty()
-                    .WithMessage("حالة المبادرة مطلوبة.");
-
-                RuleFor(x => x.Request.AssignedToId)
-                    .NotEmpty()
-                    .WithMessage("المستخدم المسؤول عن المبادرة مطلوب.");
-
                 RuleFor(x => x.Request.Color)
                     .NotEmpty()
                     .Matches("^#[0-9A-Fa-f]{6}$")

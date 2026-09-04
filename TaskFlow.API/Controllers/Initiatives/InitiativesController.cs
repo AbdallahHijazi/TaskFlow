@@ -19,6 +19,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
@@ -29,9 +30,17 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? assignedToId,
+        [FromQuery] Guid? statusId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllInitiativesQuery());
+        var result = await _mediator.Send(
+            new GetAllInitiativesQuery(assignedToId, statusId, pageNumber, pageSize, search),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -43,6 +52,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromForm] CreateInitiativeDto dto)
     {
         if (dto == null)
@@ -53,6 +63,7 @@ public class InitiativesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _mediator.Send(new DeleteInitiativeCommand(id));

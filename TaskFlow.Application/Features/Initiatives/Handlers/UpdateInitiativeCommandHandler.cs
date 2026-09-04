@@ -20,15 +20,21 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
         private readonly IRepository<Initiative> _repository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IImageService _imageService;
+        private readonly IRepository<Status> _statusRepository;
+        private readonly IWorkEventService _workEvents;
 
         public UpdateInitiativeCommandHandler(
             IRepository<Initiative> repository,
             IUnitOfWork unitOfWork,
-            IImageService imageService)
+            IImageService imageService,
+            IRepository<Status> statusRepository,
+            IWorkEventService workEvents)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _imageService = imageService;
+            _statusRepository = statusRepository;
+            _workEvents = workEvents;
         }
 
         public async Task<InitiativeDto> Handle(
@@ -42,11 +48,19 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
             if (initiative == null)
                 throw new NotFoundException("المبادرة", request.Id);
 
+            var oldStatusId = initiative.StatusId;
+            var oldAssigneeId = initiative.AssignedToId;
             initiative.Name = request.Dto.Name;
             initiative.Description = request.Dto.Description;
             initiative.StartDate = request.Dto.StartDate;
             initiative.EndDate = request.Dto.EndDate;
-            initiative.Progress = request.Dto.Progress;
+            // Progress is owned by the initiative's tasks and cannot be edited independently.
+            initiative.Progress = await _repository.GetAll()
+                .Where(i => i.Id == request.Id)
+                .Select(i => i.Tasks.Any()
+                    ? i.Tasks.Average(task => task.Progress ?? 0)
+                    : 0)
+                .SingleAsync(cancellationToken);
             initiative.IsAISuggested = request.Dto.IsAISuggested;
             initiative.StatusId = request.Dto.StatusId;
             initiative.AssignedToId = request.Dto.AssignedTo;
@@ -65,6 +79,22 @@ namespace TaskFlow.Application.Features.Initiatives.Handlers
 
             _repository.Update(initiative);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            if (oldStatusId != initiative.StatusId)
+            {
+                var statusIds = new[] { oldStatusId, initiative.StatusId }.Where(id => id.HasValue).Select(id => id!.Value).ToArray();
+                var statusNames = await _statusRepository.GetAll().Where(status => statusIds.Contains(status.Id))
+                    .ToDictionaryAsync(status => status.Id, status => status.Name, cancellationToken);
+                var oldStatusName = oldStatusId.HasValue && statusNames.TryGetValue(oldStatusId.Value, out var oldName) ? oldName : "No status";
+                var newStatusName = initiative.StatusId.HasValue && statusNames.TryGetValue(initiative.StatusId.Value, out var newName) ? newName : "No status";
+                await _workEvents.RecordInitiativeAsync(initiative.AssignedToId, initiative.Id, "initiative_status_changed",
+                    "Initiative status changed", $"{initiative.Name} moved from {oldStatusName} to {newStatusName}.",
+                    oldStatusName, newStatusName, true, cancellationToken);
+            }
+            if (oldAssigneeId != initiative.AssignedToId)
+                await _workEvents.RecordInitiativeAsync(initiative.AssignedToId, initiative.Id, "initiative_assigned",
+                    "Initiative assigned to you", $"You were assigned to initiative: {initiative.Name}.",
+                    oldAssigneeId?.ToString(), initiative.AssignedToId?.ToString(), true, cancellationToken);
 
             return new InitiativeDto
             {

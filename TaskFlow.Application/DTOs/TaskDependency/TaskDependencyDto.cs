@@ -6,4 +6,7 @@ public class TaskDependencyDto
     public Guid? DependencyTypeId { get; set; }
     public Guid? PredecessorId { get; set; }
     public Guid? SuccessorId { get; set; }
+    public string? DependencyTypeName { get; set; }
+    public string? PredecessorName { get; set; }
+    public string? SuccessorName { get; set; }
 }

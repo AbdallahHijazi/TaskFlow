@@ -15,9 +15,9 @@ using TaskFlow.Application.Features.AI.RiskAnalysis.Commands;
 using TaskFlow.Application.Features.AI.TaskGeneration.Commands;
 
 namespace TaskFlow.API.Controllers.AI;
-[AllowAnonymous]
 [ApiController]
 [Route("api/ai")]
+[Authorize(Policy = "AiAccess")]
 public class AiController : ControllerBase
 {
     private readonly IAiChatService _aiChatService;
@@ -101,6 +101,16 @@ public class AiController : ControllerBase
             new SaveGeneratedInitiativeCommand(request),
             cancellationToken);
 
+        return Ok(result);
+    }
+
+    [HttpPost("save-generated-initiatives")]
+    public async Task<ActionResult<SaveGeneratedInitiativesBatchResponse>> SaveGeneratedInitiatives(
+        [FromBody] SaveGeneratedInitiativesBatchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new SaveGeneratedInitiativesBatchCommand(request), cancellationToken);
         return Ok(result);
     }
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -9,11 +10,20 @@ namespace TaskFlow.Tests.Integration;
 
 public class TaskFlowApiFactory : WebApplicationFactory<Program>
 {
+    public const string TestJwtKey = "TEST_ONLY_SIGNING_KEY_WITH_AT_LEAST_32_BYTES_2026";
     private readonly string _databaseName = $"TaskFlowApiTests-{Guid.NewGuid()}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("Jwt:SecretKey", TestJwtKey);
+        builder.ConfigureAppConfiguration((_, configuration) =>
+        {
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:SecretKey"] = TestJwtKey
+            });
+        });
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
